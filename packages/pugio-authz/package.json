@@ -1,0 +1,26 @@
+{
+  "name": "@pugio/authz",
+  "version": "0.0.1",
+  "description": "Authz module for Nest.js",
+  "author": "lenconda <i@lenconda.top>",
+  "homepage": "https://pugio.lenconda.top",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "LICENSE",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:pugiojs/pugio.git"
+  },
+  "scripts": {
+    "build": "rimraf ./lib && tsc",
+    "build:watch": "tsc --watch",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  }
+}
