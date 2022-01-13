@@ -1,15 +1,15 @@
 {
-  "compilerOptions": {
-    "allowJs": true,
-    "baseUrl": "./",
-    "paths": {
-      "@pugio/*": ["packages/*/src"]
-    }
-  },
-  "exclude": [
-    "packages/**/*.js",
-    "docs-dist/**/*.js",
-    "scripts/**/*.js",
-    "utils/**/*.js"
-  ]
+    "compilerOptions": {
+        "allowJs": true,
+        "baseUrl": "./",
+        "paths": {
+            "@pugio/*": ["packages/*/src"]
+        }
+    },
+    "exclude": [
+        "packages/**/*.js",
+        "docs-dist/**/*.js",
+        "scripts/**/*.js",
+        "utils/**/*.js"
+    ]
 }
