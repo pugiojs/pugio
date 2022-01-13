@@ -1,0 +1,33 @@
+{
+  "name": "@pugio/client",
+  "version": "1.0.0",
+  "description": "Pugio client API",
+  "author": "lenconda <i@lenconda.top>",
+  "homepage": "https://github.com/pugiojs/pugio-commons#readme",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "files": [
+    "bin",
+    "lib",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pugiojs/pugio-commons.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/pugiojs/pugio-commons/issues"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "redis": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.178"
+  }
+}
