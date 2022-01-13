@@ -11,14 +11,14 @@ module.exports = {
     jest: true,
   },
   rules: {
-    semi: 'off',
+    semi: ['error', 'always'],
     'comma-dangle': ['error', 'always-multiline'],
     'switch-colon-spacing': ['error', {
       'after': true,
       'before': false,
     }],
     quotes: ['error', 'single'],
-    indent: ['error', 2, {
+    indent: ['error', 4, {
       SwitchCase: 1,
     }],
     'eol-last': ['error', 'always'],
