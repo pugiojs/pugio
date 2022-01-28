@@ -1,4 +1,4 @@
-const getPaths = require('../utils/paths');
+const getPaths = require('./utils/paths');
 const path = require('path');
 const { program } = require('commander');
 const {

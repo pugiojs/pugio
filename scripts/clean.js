@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs-extra');
-const getPaths = require('../utils/paths');
+const getPaths = require('./utils/paths');
 
 const clean = () => {
     const paths = getPaths();

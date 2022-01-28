@@ -1,43 +1,58 @@
 import {
     ClientMessageHandler,
     ClientOptions,
+    LockerOptions,
     RedisClient,
-} from './interfaces';
-import connect from './connection';
-import PugioLock from './lock';
+    RedisClientOptions,
+} from '@pugio/types';
+import {
+    sleep,
+} from '@pugio/utils';
+import Lock from '@pugio/lock';
 import * as _ from 'lodash';
+import connect from './connection';
 
-class PugioClient {
+class Client {
     protected redisClient: RedisClient;
+    protected lock: Lock;
     protected clientTaskQueueName: string;
     protected clientTasksLockName: string;
     protected clientTaskChannelName: string;
-    protected lock: PugioLock;
     private apiKey: string;
     private messageHandler: ClientMessageHandler;
+    private redisOptions: RedisClientOptions;
+    private lockerOptions: Omit<LockerOptions, 'redisClient' | 'lockName'>;
 
     public constructor(options: ClientOptions) {
         const {
-            redis: redisOptions,
-            lock: lockOptions,
+            redis: redisOptions = {},
+            locker: lockerOptions = {},
             clientId,
             apiKey,
             onMessage: messageHandler = _.noop,
         } = options;
 
+        this.redisOptions = redisOptions;
+        this.lockerOptions = lockerOptions;
         this.apiKey = apiKey;
-        this.lock = new PugioLock(lockOptions);
         this.clientTaskQueueName = `${clientId}:task_queue`;
         this.clientTasksLockName = `${clientId}:tasks_lock`;
         this.clientTaskChannelName = `${clientId}@execution`;
         this.messageHandler = messageHandler;
+    }
 
+    public run() {
         connect(
             {
-                ...redisOptions,
+                ...this.redisOptions,
                 onClientReady: async (client) => {
-                    this.redisClient = client;
                     if (client.isOpen) {
+                        this.redisClient = client;
+                        this.lock = new Lock({
+                            ...this.lockerOptions,
+                            lockName: this.clientTasksLockName,
+                            redisClient: client,
+                        });
                         this.handleClientReady();
                     }
                 },
@@ -49,6 +64,12 @@ class PugioClient {
                 },
             },
         );
+    }
+
+    private async consumeTask() {
+        const data = await this.redisClient.LPOP(this.clientTaskQueueName);
+        // TODO parse data
+        return data;
     }
 
     private async handleClientReady() {
@@ -66,8 +87,8 @@ class PugioClient {
             });
         }
 
-        while ((await this.redisClient.llen(clientTaskQueueName)) > 0) {
-            await new Promise((resolve) => setTimeout(() => resolve(void 0), 500));
+        while ((await this.redisClient.LLEN(clientTaskQueueName)) > 0) {
+            await sleep();
             await this.consumeTask();
         }
 
@@ -77,7 +98,11 @@ class PugioClient {
             this.messageHandler(clearQueueUnlockResult.data);
         }
 
-        this.redisClient.subscribe(clientTaskChannelName, () => {
+        this.redisClient.subscribe(clientTaskChannelName, (timestamp) => {
+            this.messageHandler({
+                level: 'info',
+                data: `Receive Task: ${timestamp}`,
+            });
             this
                 .consumeTask()
                 .then((task) => {
@@ -88,28 +113,25 @@ class PugioClient {
                     });
                 })
                 .catch((error) => {
+                    console.log(error);
                     // TODO error handle, push a status code to server
-                    this.messageHandler(error.message || error.toString());
+                    this.messageHandler({
+                        level: 'error',
+                        data: error.message || error.toString(),
+                    });
                 })
                 .finally(() => {
                     this.lock
                         .unlock()
                         .catch((error) => {
-                            this.messageHandler(error.message || error.toString());
+                            this.messageHandler({
+                                level: 'error',
+                                data: error.message || error.toString(),
+                            });
                         });
                 });
         });
     }
-
-    private async consumeTask() {
-        try {
-            const data = await this.redisClient.lpop();
-            // TODO parse data
-            return data;
-        } catch (e) {
-            this.messageHandler(e.message || e.toString());
-        }
-    }
 }
 
-export default PugioClient;
+export default Client;

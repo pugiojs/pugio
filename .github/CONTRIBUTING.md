@@ -27,7 +27,7 @@ Clone repo and initialize the setup environment:
 $ npm i lerna -g
 
 # 2. clone and setup
-$ git clone git@github.com:pugiojs/pugio-commons.git
+$ git clone git@github.com:pugiojs/pugio.git
 $ cd pugio-commons && npm i && lerna bootstrap
 ```
 
@@ -52,7 +52,7 @@ $ cd pugio-commons && npm i && lerna bootstrap
 
 1. Fork this project to your namespace
 2. Commit code and push to your forked origin
-3. Make a Pull Request, merge from your repo to `master` branch of `pugiojs/pugio-commons`
+3. Make a Pull Request, merge from your repo to `master` branch of `pugiojs/pugio`
 
 ## Start Developing
 

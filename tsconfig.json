@@ -9,7 +9,6 @@
     "exclude": [
         "packages/**/*.js",
         "docs-dist/**/*.js",
-        "scripts/**/*.js",
-        "utils/**/*.js"
+        "scripts/**/*.js"
     ]
 }

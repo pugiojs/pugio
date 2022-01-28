@@ -1,7 +1,7 @@
 {
-    "name": "@pugio/client",
+    "name": "@pugio/lock",
     "version": "1.0.0",
-    "description": "Pugio client API",
+    "description": "Pugio.js Locker",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
     "license": "MIT",
@@ -24,13 +24,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/lock": "^1.0.0",
         "@pugio/types": "^1.0.0",
-        "@pugio/utils": "^1.0.0",
-        "lodash": "^4.17.21",
-        "redis": "^4.0.1"
-    },
-    "devDependencies": {
-        "@types/lodash": "^4.14.178"
+        "@pugio/utils": "^1.0.0"
     }
 }
