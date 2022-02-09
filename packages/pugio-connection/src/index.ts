@@ -5,13 +5,18 @@ import * as _ from 'lodash';
 import {
     RedisConnectionOptions,
     RedisClientOptions,
+    AbstractConnection,
 } from '@pugio/types';
 
-export class Connection {
-    protected client: any;
+export class Connection extends AbstractConnection implements AbstractConnection  {
+    private client: any;
+    private options: RedisConnectionOptions;
     private connectedFlag = false;
 
-    public constructor(protected options: RedisConnectionOptions) {}
+    public constructor(options: RedisConnectionOptions) {
+        super();
+        this.options = options;
+    }
 
     public async connect() {
         const redisClientOptions: RedisClientOptions  = _.omit(

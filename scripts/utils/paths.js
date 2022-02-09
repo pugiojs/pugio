@@ -4,11 +4,11 @@ const glob = require('glob');
 module.exports = () => {
     const {
         packages = [],
-    } = require(path.resolve(__dirname, '../lerna.json'));
+    } = require(path.resolve(process.cwd(), 'lerna.json'));
 
     const paths = packages.reduce((result, pattern) => {
         const paths = glob.sync(pattern, {
-            cwd: path.resolve(__dirname, '..'),
+            cwd: process.cwd(),
         });
         return result.concat(paths);
     }, []);
