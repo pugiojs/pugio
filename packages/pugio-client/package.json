@@ -24,15 +24,15 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/lock": "^1.0.0",
+        "@pugio/connection": "^1.0.0",
         "@pugio/types": "^1.0.0",
         "@pugio/utils": "^1.0.0",
-        "axios": "^0.25.0",
         "lodash": "^4.17.21",
-        "redis": "^4.0.1"
+        "redis": "^4.0.1",
+        "reflect-metadata": "^0.1.13",
+        "typedi": "^0.10.0"
     },
     "devDependencies": {
-        "@types/axios": "^0.14.0",
         "@types/lodash": "^4.14.178"
     }
 }

@@ -24,6 +24,12 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "redis": "^4.0.2"
+        "axios": "^0.25.0",
+        "redis": "^4.0.2",
+        "reflect-metadata": "^0.1.13",
+        "typedi": "^0.10.0"
+    },
+    "devDependencies": {
+        "@types/axios": "^0.14.0"
     }
 }

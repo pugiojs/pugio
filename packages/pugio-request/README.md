@@ -1,11 +1,11 @@
-# `pugio-lock`
+# `pugio-request`
 
 > TODO: description
 
 ## Usage
 
 ```
-const pugioLock = require('pugio-lock');
+const pugioRequest = require('pugio-request');
 
 // TODO: DEMONSTRATE API
 ```

@@ -1,8 +1,8 @@
-import { AbstractConnection } from './connection';
+import { AbstractConnection } from '../connection';
 import {
     RedisClient,
     RedisClientOptions,
-} from './redis';
+} from '../redis';
 
 export type ClientMessageLevel = 'info' | 'warn' | 'error';
 
@@ -17,8 +17,7 @@ export interface ClientOptions {
     clientId: string;
     apiKey: string;
     connection?: AbstractConnection;
-    redis: RedisClientOptions;
-    locker?: Omit<LockerOptions, 'redisClient' | 'lockName'>;
+    redisOptions?: RedisClientOptions;
     onMessage?: ClientMessageHandler;
 }
 

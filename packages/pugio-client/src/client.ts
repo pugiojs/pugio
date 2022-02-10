@@ -1,44 +1,35 @@
+import 'reflect-metadata';
 import {
     ClientMessageHandler,
     ClientOptions,
-    LockerOptions,
     RedisClient,
     RedisClientOptions,
 } from '@pugio/types';
 import {
     sleep,
 } from '@pugio/utils';
-import Lock from '@pugio/lock';
 import * as _ from 'lodash';
+import {
+    Service,
+    Inject,
+} from 'typedi';
+import { ConnectionService } from '@pugio/connection';
 
-export class Client {
+@Service()
+export class ClientService {
     protected redisClient: RedisClient;
-    protected lock: Lock;
-    protected clientTaskQueueName: string;
-    protected clientTasksLockName: string;
-    protected clientTaskChannelName: string;
+    @Inject('API_KEY')
     private apiKey: string;
-    private messageHandler: ClientMessageHandler;
+    @Inject('CLIENT_ID')
+    private clientId: string;
+    @Inject('REDIS_OPTIONS')
     private redisOptions: RedisClientOptions;
-    private lockerOptions: Omit<LockerOptions, 'redisClient' | 'lockName'>;
+    @Inject('MESSAGE_HANDLER')
+    private messageHandler: ClientMessageHandler;
 
-    public constructor(options: ClientOptions) {
-        const {
-            redis: redisOptions = {},
-            locker: lockerOptions = {},
-            clientId,
-            apiKey,
-            onMessage: messageHandler = _.noop,
-        } = options;
-
-        this.redisOptions = redisOptions;
-        this.lockerOptions = lockerOptions;
-        this.apiKey = apiKey;
-        this.clientTaskQueueName = `${clientId}:task_queue`;
-        this.clientTasksLockName = `${clientId}:tasks_lock`;
-        this.clientTaskChannelName = `${clientId}@execution`;
-        this.messageHandler = messageHandler;
-    }
+    public constructor(
+        private readonly connectionService: ConnectionService,
+    ) {}
 
     public run() {
         // connect(

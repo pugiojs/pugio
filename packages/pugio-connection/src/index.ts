@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import {
     createClient,
 } from 'redis';
@@ -7,8 +8,10 @@ import {
     RedisClientOptions,
     AbstractConnection,
 } from '@pugio/types';
+import { Service } from 'typedi';
 
-export class Connection extends AbstractConnection implements AbstractConnection  {
+@Service()
+export class ConnectionService extends AbstractConnection implements AbstractConnection  {
     private client: any;
     private options: RedisConnectionOptions;
     private connectedFlag = false;
