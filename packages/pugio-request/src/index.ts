@@ -11,24 +11,46 @@ import * as _ from 'lodash';
 export class RequestService {
     protected instance: Axios;
 
-    public constructor(
-        protected readonly options: RequestOptions = {},
+    public initialize(
+        options: RequestOptions = {},
+        instanceModifier?: (instance: Axios) => void,
     ) {
         const {
             clientKey = '',
             requestConfig = {},
             messageHandler = _.noop,
-        } = this.options;
+        } = options;
 
         this.instance = new Axios({
             responseEncoding: 'utf8',
             responseType: 'json',
-            transformResponse: (response) => response,
+            transformRequest: [
+                (data) => {
+                    if (_.isString(data)) {
+                        return data;
+                    }
+
+                    if (_.isObject(data) || _.isObjectLike(data)) {
+                        try {
+                            return JSON.stringify(data);
+                        } catch (e) {
+                            return '';
+                        }
+                    }
+
+                    return data;
+                },
+            ],
             ...requestConfig,
         });
 
         this.instance.interceptors.request.use((config) => {
-            return _.set(config, 'headers[CLIENT-KEY]', clientKey);
+            return _.merge(config, {
+                headers: {
+                    'CLIENT-KEY': clientKey,
+                    'Content-Type': 'application/json',
+                },
+            });
         });
 
         this.instance.interceptors.response.use(
@@ -48,6 +70,10 @@ export class RequestService {
                 });
             },
         );
+
+        if (_.isFunction(instanceModifier)) {
+            instanceModifier(this.instance);
+        }
     }
 
     public getInstance(options: ResponseGetInstanceOptions = {}) {

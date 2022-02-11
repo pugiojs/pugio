@@ -1,10 +1,13 @@
 {
-    "name": "@pugio/types",
+    "name": "@pugio/cli",
     "version": "1.0.0",
-    "description": "Pugio.js Types",
+    "description": "Pugio CLI",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
     "license": "MIT",
+    "bin": {
+        "pugio": "bin/cli.js"
+    },
     "main": "lib/index.js",
     "files": [
         "bin",
@@ -24,12 +27,8 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "axios": "^0.25.0",
-        "redis": "^4.0.2",
+        "@pugio/client": "^1.0.0",
         "reflect-metadata": "^0.1.13",
         "typedi": "0.8.0"
-    },
-    "devDependencies": {
-        "@types/axios": "^0.14.0"
     }
 }

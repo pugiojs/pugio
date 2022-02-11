@@ -1,4 +1,4 @@
-import { AbstractConnection } from '../connection';
+import { SDKOptions } from '../sdk';
 import {
     RedisClient,
     RedisClientOptions,
@@ -14,9 +14,12 @@ export interface ClientMessage {
 export type ClientMessageHandler = (message: ClientMessage) => void | Promise<void>;
 
 export interface ClientOptions {
-    clientId: string;
-    apiKey: string;
-    connection?: AbstractConnection;
+    clientId?: string;
+    apiKey?: string;
+    publicKey?: string;
+    privateKey?: string;
+    hostname?: string;
+    apiVersion?: number;
     redisOptions?: RedisClientOptions;
     onMessage?: ClientMessageHandler;
 }

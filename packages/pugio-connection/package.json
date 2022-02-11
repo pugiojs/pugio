@@ -27,6 +27,6 @@
         "@pugio/types": "^1.0.0",
         "redis": "^4.0.3",
         "reflect-metadata": "^0.1.13",
-        "typedi": "^0.10.0"
+        "typedi": "0.8.0"
     }
 }
