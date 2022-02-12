@@ -55,6 +55,7 @@ export class RequestService {
 
         this.instance.interceptors.response.use(
             (response) => {
+                console.log('LENCONDA:response', response.status);
                 return response.data || response;
             },
             (error) => {

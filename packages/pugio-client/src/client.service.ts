@@ -69,7 +69,7 @@ export class ClientService {
 
     public async run() {
         const data = await this.sdkService.makeChallenge(this.machineId);
-        console.log(data);
+        console.log('LENCONDA:res', data);
         // connect(
         //     {
         //         ...this.redisOptions,

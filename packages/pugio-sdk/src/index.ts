@@ -36,18 +36,29 @@ export class SDKService {
                 messageHandler: _.isFunction(messageHandler) ? messageHandler : _.noop,
             },
             (instance) => {
-                const defaultRequestTransformers = instance.defaults.transformRequest;
+                const defaultRequestTransformers = instance.defaults.transformRequest || [];
+                const defaultResponseTransformers = instance.defaults.transformResponse || [];
 
                 instance.defaults.transformRequest = [
                     (data) => {
                         return this.utilsService.transformDTOToDAO(data);
                     },
-                    ...(defaultRequestTransformers as any),
+                    ...(
+                        _.isArray(defaultRequestTransformers)
+                            ? defaultRequestTransformers
+                            : [defaultRequestTransformers]
+                    ),
                 ];
+
                 instance.defaults.transformResponse = [
                     (data) => {
                         return this.utilsService.transformDAOToDTO(data);
                     },
+                    ...(
+                        _.isArray(defaultResponseTransformers)
+                            ? defaultResponseTransformers
+                            : [defaultResponseTransformers]
+                    ),
                 ];
             },
         );
