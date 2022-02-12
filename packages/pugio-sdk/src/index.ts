@@ -52,7 +52,20 @@ export class SDKService {
                 ];
 
                 instance.interceptors.response.use((response) => {
-                    return response.data;
+                    const responseStatus = response.status;
+                    const responseContent = response.data || response;
+                    const data = {
+                        response: null,
+                        error: null,
+                    };
+
+                    if (responseStatus >= 300) {
+                        data.error = responseContent;
+                    } else {
+                        data.response = responseContent;
+                    }
+
+                    return data;
                 });
             },
         );

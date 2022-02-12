@@ -55,21 +55,6 @@ export class RequestService {
                     return data;
                 },
             ],
-            transformResponse: [
-                (response) => {
-                    const responseContent = response.data || response;
-                    const data = {
-                        response: null,
-                        error: null,
-                    };
-                    if (response.status >= 300) {
-                        data.error = responseContent;
-                    } else {
-                        data.response = responseContent;
-                    }
-                    return data;
-                },
-            ],
             ...requestConfig,
         });
 
@@ -119,15 +104,7 @@ export class RequestService {
                 ),
                 (data) => {
                     try {
-                        if (!_.isNull(data.response)) {
-                            data.response = JSON.parse(data.response);
-                        }
-
-                        if (!_.isNull(data.error)) {
-                            data.error = JSON.parse(data.error);
-                        }
-
-                        return data;
+                        return JSON.parse(data);
                     } catch (e) {
                         return data;
                     }
