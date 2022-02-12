@@ -4,14 +4,11 @@ import { ClientMessageHandler } from '../client';
 export interface RequestOptions {
     clientKey?: string;
     requestConfig?: AxiosRequestConfig;
+    json?: boolean;
+    transformCase?: boolean;
     messageHandler?: ClientMessageHandler;
 }
 
 export interface ResponseGetInstanceOptions {
     json?: boolean;
-}
-
-export interface MakeChallengeResponse {
-    credential: string;
-    task_channel_name: string;
 }

@@ -4,6 +4,7 @@ import { RequestService } from '@pugio/request';
 import {
     MakeChallengeResponse,
     SDKOptions,
+    SDKResponse,
 } from '@pugio/types';
 import _ from 'lodash';
 import { UtilsService } from '@pugio/utils';
@@ -30,6 +31,7 @@ export class SDKService {
         this.requestService.initialize(
             {
                 clientKey,
+                transformCase: true,
                 requestConfig: {
                     baseURL: `https://${hostname}/api/v${apiVersion}`,
                 },
@@ -37,7 +39,6 @@ export class SDKService {
             },
             (instance) => {
                 const defaultRequestTransformers = instance.defaults.transformRequest || [];
-                const defaultResponseTransformers = instance.defaults.transformResponse || [];
 
                 instance.defaults.transformRequest = [
                     (data) => {
@@ -50,21 +51,14 @@ export class SDKService {
                     ),
                 ];
 
-                instance.defaults.transformResponse = [
-                    (data) => {
-                        return this.utilsService.transformDAOToDTO(data);
-                    },
-                    ...(
-                        _.isArray(defaultResponseTransformers)
-                            ? defaultResponseTransformers
-                            : [defaultResponseTransformers]
-                    ),
-                ];
+                instance.interceptors.response.use((response) => {
+                    return response.data;
+                });
             },
         );
     }
 
-    public async makeChallenge(deviceId: string): Promise<MakeChallengeResponse> {
+    public async makeChallenge(deviceId: string): SDKResponse<MakeChallengeResponse> {
         return await this.requestService
             .getInstance()
             .post('/client/challenge', {

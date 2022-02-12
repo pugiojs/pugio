@@ -5,11 +5,20 @@ import {
     RequestOptions,
     ResponseGetInstanceOptions,
 } from '@pugio/types';
+import {
+    UtilsService,
+} from '@pugio/utils';
 import * as _ from 'lodash';
 
 @Service()
 export class RequestService {
     protected instance: Axios;
+    private json: boolean;
+    private transformCase: boolean;
+
+    public constructor(
+        private readonly utilsService: UtilsService,
+    ) {}
 
     public initialize(
         options: RequestOptions = {},
@@ -18,8 +27,13 @@ export class RequestService {
         const {
             clientKey = '',
             requestConfig = {},
+            json = true,
+            transformCase = false,
             messageHandler = _.noop,
         } = options;
+
+        this.json = json;
+        this.transformCase = transformCase;
 
         this.instance = new Axios({
             responseEncoding: 'utf8',
@@ -41,6 +55,21 @@ export class RequestService {
                     return data;
                 },
             ],
+            transformResponse: [
+                (response) => {
+                    const responseContent = response.data || response;
+                    const data = {
+                        response: null,
+                        error: null,
+                    };
+                    if (response.status >= 300) {
+                        data.error = responseContent;
+                    } else {
+                        data.response = responseContent;
+                    }
+                    return data;
+                },
+            ],
             ...requestConfig,
         });
 
@@ -54,10 +83,7 @@ export class RequestService {
         });
 
         this.instance.interceptors.response.use(
-            (response) => {
-                console.log('LENCONDA:response', response.status);
-                return response.data || response;
-            },
+            null,
             (error) => {
                 let message = '';
                 if (!error) {
@@ -78,17 +104,61 @@ export class RequestService {
     }
 
     public getInstance(options: ResponseGetInstanceOptions = {}) {
-        const { json = true } = options;
+        const { json: getInstanceJson = this.json } = options;
         const currentInstance = _.cloneDeep(this.instance);
 
-        if (json) {
-            currentInstance.interceptors.response.use((response: any) => {
-                try {
-                    return JSON.parse(response);
-                } catch (e) {
-                    return response;
-                }
-            });
+        if (getInstanceJson) {
+            const requestTransformers = currentInstance.defaults.transformRequest || [];
+            const responseTransformers = currentInstance.defaults.transformResponse || [];
+
+            currentInstance.defaults.transformResponse = [
+                ...(
+                    _.isArray(responseTransformers)
+                        ? responseTransformers
+                        : [responseTransformers]
+                ),
+                (data) => {
+                    try {
+                        if (!_.isNull(data.response)) {
+                            data.response = JSON.parse(data.response);
+                        }
+
+                        if (!_.isNull(data.error)) {
+                            data.error = JSON.parse(data.error);
+                        }
+
+                        return data;
+                    } catch (e) {
+                        return data;
+                    }
+                },
+                ...(
+                    this.transformCase
+                        ? [
+                            (data) => {
+                                return this.utilsService.transformDAOToDTO(data);
+                            },
+                        ]
+                        : []
+                ),
+            ];
+
+            currentInstance.defaults.transformRequest = [
+                ...(
+                    _.isArray(requestTransformers)
+                        ? requestTransformers
+                        : [requestTransformers]
+                ),
+                ...(
+                    this.transformCase
+                        ? [
+                            (data) => {
+                                return this.utilsService.transformDTOToDAO(data);
+                            },
+                        ]
+                        : []
+                ),
+            ];
         }
 
         return currentInstance;
