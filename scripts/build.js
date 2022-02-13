@@ -23,31 +23,40 @@ const build = (watch = false, selectedPackages = []) => {
         };
     });
 
-    const projectPackages = packages.map((package) => {
-        const {
-            name,
-            pathname,
-            dependencies,
-        } = package;
+    const projectPackages = packages
+        .map((package) => {
+            const {
+                name,
+                pathname,
+                dependencies,
+            } = package;
 
-        return {
-            name,
-            pathname,
-            dependencies: dependencies.filter((dependencyName) => {
-                return packages.findIndex((package) => dependencyName === package.name) !== -1;
-            }),
-        };
-    }).sort((previousPackage, nextPackage) => {
-        if (nextPackage.dependencies.findIndex((dependencyName) => dependencyName === previousPackage.name) !== -1) {
-            return -1;
-        } else if (previousPackage.dependencies.findIndex((dependencyName) => dependencyName === nextPackage.name) !== -1) {
-            return 1;
-        } else {
-            return 0;
+            return {
+                name,
+                pathname,
+                dependencies: dependencies.filter((dependencyName) => {
+                    return packages.findIndex((package) => dependencyName === package.name) !== -1;
+                }),
+            };
+        });
+
+    const sortedProjectPackages = [];
+
+    while (projectPackages.length !== 0) {
+        for (const [index, projectPackage] of projectPackages.entries()) {
+            if (
+                projectPackage.dependencies.length === 0 ||
+                projectPackage.dependencies.every((dependencyName) => {
+                    return sortedProjectPackages.map((package) => package.name).indexOf(dependencyName) !== -1;
+                })
+            ) {
+                sortedProjectPackages.push(projectPackage);
+                projectPackages.splice(index, 1);
+            }
         }
-    });
+    }
 
-    for (const projectPackage of projectPackages) {
+    for (const projectPackage of sortedProjectPackages) {
         const {
             name,
             pathname,
