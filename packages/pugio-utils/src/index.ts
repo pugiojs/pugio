@@ -7,6 +7,8 @@ import {
     DataType,
     CaseStyleType,
 } from '@pugio/types';
+import cluster from 'cluster';
+import * as child_process from 'child_process';
 
 @Service()
 export class UtilsService {
@@ -117,5 +119,28 @@ export class UtilsService {
 
     public generateClientKey(apiKey: string, clientId: string) {
         return Buffer.from(`${apiKey}:${clientId}`).toString('base64');
+    }
+
+    public async daemonize(script: string, args: string[] = [], options: child_process.ForkOptions = {}) {
+        const child = child_process.fork(script, args, options);
+        child.unref();
+        return child;
+    }
+
+    public async keepalive(callbackFn: () => any | Promise<any>) {
+        if (
+            (_.isBoolean(cluster.isPrimary) && cluster.isPrimary) ||
+            (_.isBoolean(cluster.isMaster) && cluster.isMaster)
+        ) {
+            cluster.fork();
+
+            cluster.on('exit', () => {
+                cluster.fork();
+            });
+        }
+
+        if (cluster.isWorker && _.isFunction(callbackFn)) {
+            await callbackFn();
+        }
     }
 }

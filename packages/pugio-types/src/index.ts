@@ -5,3 +5,4 @@ export * from './connection';
 export * from './execution';
 export * from './sdk';
 export * from './utils';
+export * from './cli';

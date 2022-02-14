@@ -1,0 +1,9 @@
+{
+    "sdk": {
+        "hostname": "pugio.lenconda.top",
+        "apiVersion": 1
+    },
+    "connection": {
+        "pollTimeGap": 1000
+    }
+}

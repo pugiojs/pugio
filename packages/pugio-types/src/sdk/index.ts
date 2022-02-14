@@ -17,9 +17,21 @@ export interface SDKResponseData<T> {
     error?: SDKError;
 }
 
+export interface MakeChallengeRequest {
+    deviceId: string;
+}
+
 export interface MakeChallengeResponse {
     credential: string;
-    task_channel_name: string;
+    taskChannelName: string;
+    taskQueueName: string;
+    tasksLockName: string;
+    clientInfo: {
+        flags: string[];
+        commands: string;
+        keys: string[];
+        channels: string[];
+    };
 }
 
 export type SDKResponse<T> = Promise<SDKResponseData<T>>;

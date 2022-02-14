@@ -13,11 +13,10 @@ import { Service } from 'typedi';
 @Service()
 export class ConnectionService extends AbstractConnection implements AbstractConnection  {
     private client: any;
-    private options: RedisConnectionOptions;
+    private options: RedisConnectionOptions = {};
     private connectedFlag = false;
 
-    public constructor(options: RedisConnectionOptions) {
-        super();
+    public initialize(options: RedisClientOptions = {}) {
         this.options = options;
     }
 

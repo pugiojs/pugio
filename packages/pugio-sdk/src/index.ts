@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { Service } from 'typedi';
 import { RequestService } from '@pugio/request';
 import {
+    MakeChallengeRequest,
     MakeChallengeResponse,
     SDKOptions,
     SDKResponse,
@@ -71,11 +72,9 @@ export class SDKService {
         );
     }
 
-    public async makeChallenge(deviceId: string): SDKResponse<MakeChallengeResponse> {
+    public async makeChallenge(options: MakeChallengeRequest): SDKResponse<MakeChallengeResponse> {
         return await this.requestService
             .getInstance()
-            .post('/client/challenge', {
-                deviceId,
-            });
+            .post('/client/challenge', options);
     }
 }
