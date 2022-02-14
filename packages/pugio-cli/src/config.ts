@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { CLIConfig } from '@pugio/types';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -7,6 +8,8 @@ import {
     configFile as defaultConfigFile,
     pidFile,
 } from './defaults';
+import { Service } from 'typedi';
+import { UtilsService } from '@pugio/utils';
 
 abstract class AbstractConfig {
     protected config: CLIConfig = {};
@@ -15,16 +18,20 @@ abstract class AbstractConfig {
     public abstract getConfig(pathname?: string): any;
 }
 
-export class Config extends AbstractConfig implements AbstractConfig {
+@Service()
+export class ConfigService extends AbstractConfig implements AbstractConfig {
     private defaultConfigFilePathname: string;
 
-    public constructor() {
+    public constructor(
+        private readonly utilsService: UtilsService,
+    ) {
         super();
         this.defaultConfigFilePathname = path.resolve(
             dataDir,
             defaultConfigFile,
         );
 
+        this.utilsService.ensureDataDir(dataDir);
         this.ensureConfigFile();
 
         this.config = this.readConfig(this.defaultConfigFilePathname);

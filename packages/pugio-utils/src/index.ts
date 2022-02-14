@@ -9,6 +9,7 @@ import {
 } from '@pugio/types';
 import cluster from 'cluster';
 import * as child_process from 'child_process';
+import * as fs from 'fs-extra';
 
 @Service()
 export class UtilsService {
@@ -143,4 +144,15 @@ export class UtilsService {
             await callbackFn();
         }
     }
+
+    public ensureDataDir(dirname: string) {
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+
+        if (fs.statSync(dirname).isFile()) {
+            fs.removeSync(dirname);
+            fs.mkdirpSync(dirname);
+        }
+    };
 }
