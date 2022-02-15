@@ -8,9 +8,11 @@
         "docs:deploy": "node scripts/docs.js",
         "checksum": "node scripts/check.js",
         "publish": "node scripts/publish.js",
-        "symlink": "node scripts/symlink.js",
-        "symlink:remove": "node scripts/symlink.js remove",
-        "clean": "node scripts/clean.js"
+        "symlink-binaries": "node scripts/symlink-binaries.js",
+        "symlink-packages": "node scripts/symlink-packages.js",
+        "clean": "node scripts/clean.js",
+        "chmod": "node scripts/chmod.js",
+        "postinstall": "lerna bootstrap && npm run build && npm run chmod"
     },
     "devDependencies": {
         "@types/jest": "^26.0.23",
