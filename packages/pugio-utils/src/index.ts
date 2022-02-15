@@ -21,7 +21,8 @@ export class UtilsService {
         });
     };
 
-    public decryptTaskAesKey(encryptedAesKey: string, privateKey: string) {
+    public decryptTaskAesKey(encryptedAesKey: string, privateKeyPathname: string) {
+        const privateKey = this.permanentlyReadFileSync(privateKeyPathname);
         const rsaKeyPair = new NodeRSA({
             b: 1024,
         }).importKey(privateKey, 'pkcs8-private-pem');
