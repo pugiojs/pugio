@@ -80,10 +80,10 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
 
     public ensureConfigFile() {
         if (
-            !fs.existsSync(this.defaultConfigFilePathname) &&
+            !fs.existsSync(this.defaultConfigFilePathname) ||
             !fs.statSync(this.defaultConfigFilePathname).isFile()
         ) {
-            const defaultConfig = fs.readFileSync(path.resolve(__dirname, './default.json')).toString();
+            const defaultConfig = fs.readFileSync(path.resolve(__dirname, '../../static/default.json')).toString();
             fs.writeFileSync(this.defaultConfigFilePathname, defaultConfig, {
                 encoding: 'utf-8',
             });

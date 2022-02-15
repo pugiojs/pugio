@@ -7,5 +7,6 @@ export const initialize = () => {
     const utilsService = Container.get<UtilsService>(UtilsService);
     utilsService.ensureDataDir(dataDir);
     const configService = Container.get<ConfigService>(ConfigService);
+    configService.ensureConfigFile();
     return configService;
 };

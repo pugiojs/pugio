@@ -12,6 +12,7 @@
     "files": [
         "bin",
         "lib",
+        "static",
         "package.json",
         "README.md",
         "LICENSE"
@@ -30,11 +31,13 @@
         "@pugio/client": "^1.0.0",
         "@pugio/types": "^1.0.0",
         "@pugio/utils": "^1.0.0",
+        "commander": "^9.0.0",
         "find-process": "^1.4.7",
         "fs-extra": "^10.0.0",
         "lodash": "^4.17.21",
         "reflect-metadata": "^0.1.13",
-        "typedi": "0.8.0"
+        "typedi": "0.8.0",
+        "yup": "^0.32.11"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",

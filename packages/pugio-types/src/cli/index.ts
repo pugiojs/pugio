@@ -13,3 +13,8 @@ export interface CLIConfig {
         pollTimerGap?: number;
     };
 }
+
+export interface CommandOptions<P> {
+    name: string;
+    program: P;
+}

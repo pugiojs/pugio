@@ -13,7 +13,7 @@ const loggerService = Container.get<LoggerService>(LoggerService);
 utilsService.keepalive(async () => {
     const userConfigFilePathname = process.argv[2] || '';
 
-    if (userConfigFilePathname) {
+    if (_.isString(userConfigFilePathname)) {
         configService.mergeUserConfig(userConfigFilePathname);
     }
 
