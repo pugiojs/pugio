@@ -7,7 +7,7 @@ import {
     dataDir,
     configFile as defaultConfigFile,
     pidFile,
-} from './defaults';
+} from '../defaults';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
 

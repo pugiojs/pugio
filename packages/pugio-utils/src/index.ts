@@ -123,7 +123,11 @@ export class UtilsService {
     }
 
     public async daemonize(script: string, args: string[] = [], options: child_process.ForkOptions = {}) {
-        const child = child_process.fork(script, args, options);
+        const child = child_process.fork(script, args, {
+            ...options,
+            detached: true,
+            stdio: 'ignore',
+        });
         child.unref();
         return child;
     }

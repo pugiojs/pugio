@@ -10,6 +10,6 @@ export interface CLIConfig {
         apiVersion?: number;
     };
     connection?: {
-        pollTimeGap?: number;
+        pollTimerGap?: number;
     };
 }

@@ -4,6 +4,6 @@
         "apiVersion": 1
     },
     "connection": {
-        "pollTimeGap": 1000
+        "pollTimerGap": 1000
     }
 }
