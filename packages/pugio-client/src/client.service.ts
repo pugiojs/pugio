@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import {
     ClientMessageHandler,
     ClientOptions,
+    MakeChallengeResponse,
     RedisClient,
     RedisClientOptions,
 } from '@pugio/types';
@@ -64,77 +65,62 @@ export class ClientService {
             hostname,
             apiVersion,
             onMessage: this.messageHandler,
+            onError: (error) => {
+                this.messageHandler({
+                    level: 'error',
+                    data: error.message,
+                });
+            },
         });
     }
 
     public async run() {
-        const data = await this.sdkService.makeChallenge({
+        const {
+            response = {} as MakeChallengeResponse,
+        } = await this.sdkService.makeChallenge({
             deviceId: this.machineId,
         });
-        console.log('LENCONDA:res', data);
-        // connect(
-        //     {
-        //         ...this.redisOptions,
-        //         onClientReady: async (client) => {
-        //             if (client.isOpen) {
-        //                 this.redisClient = client;
-        //                 this.lock = new Lock({
-        //                     ...this.lockerOptions,
-        //                     lockName: this.clientTasksLockName,
-        //                     redisClient: client,
-        //                 });
-        //                 this.handleClientReady();
-        //             }
-        //         },
-        //         onError: async (error) => {
-        //             this.messageHandler({
-        //                 level: 'error',
-        //                 data: error.message || error.toString(),
-        //             });
-        //         },
-        //     },
-        // );
+
+        const {
+            credential,
+            taskChannelName,
+        } = response;
+
+        this.connectionService.initialize({
+            ...this.redisOptions,
+            username: this.clientId,
+            password: credential,
+            onClientReady: async (client) => {
+                if (client.isOpen) {
+                    this.redisClient = client;
+                    await this.sdkService.connected({ credential });
+                    this.handleClientReady(taskChannelName);
+                }
+            },
+            onError: async (error) => {
+                this.messageHandler({
+                    level: 'error',
+                    data: error.message || error.toString(),
+                });
+            },
+        });
+
+        this.connectionService.connect();
     }
 
-    // private async consumeTask() {
+    // private async consumeTask(lockPass: string) {
     //     const data = await this.redisClient.LPOP(this.clientTaskQueueName);
     //     // TODO parse data
     //     return data;
     // }
 
-    // private async handleClientReady() {
-    //     this.redisClient.subscribe(clientTaskChannelName, (timestamp) => {
-    //         this.messageHandler({
-    //             level: 'info',
-    //             data: `Receive Task: ${timestamp}`,
-    //         });
-    //         this
-    //             .consumeTask()
-    //             .then((task) => {
-    //                 // TODO
-    //                 this.messageHandler({
-    //                     level: 'info',
-    //                     data: `Consume: ${task}`,
-    //                 });
-    //             })
-    //             .catch((error) => {
-    //                 console.log(error);
-    //                 // TODO error handle, push a status code to server
-    //                 this.messageHandler({
-    //                     level: 'error',
-    //                     data: error.message || error.toString(),
-    //                 });
-    //             })
-    //             .finally(() => {
-    //                 this.lock
-    //                     .unlock()
-    //                     .catch((error) => {
-    //                         this.messageHandler({
-    //                             level: 'error',
-    //                             data: error.message || error.toString(),
-    //                         });
-    //                     });
-    //             });
-    //     });
-    // }
+    private async handleClientReady(channelName: string) {
+        this.redisClient.subscribe(channelName, (lockPass) => {
+            this.messageHandler({
+                level: 'info',
+                data: 'Received task',
+            });
+            // TODO consume task with `lockPass`
+        });
+    }
 }

@@ -1,11 +1,16 @@
 import { ClientMessageHandler } from '../client';
 
+export type SDKErrorHandler = (error: Error) => void;
+
 export interface SDKOptions {
     clientKey?: string;
     hostname?: string;
     apiVersion?: number;
     onMessage?: ClientMessageHandler;
+    onError?: SDKErrorHandler;
 }
+
+export type SDKResponse<T> = Promise<SDKResponseData<T>>;
 
 export interface SDKError {
     statusCode: number;
@@ -21,11 +26,18 @@ export interface MakeChallengeRequest {
     deviceId: string;
 }
 
-export interface MakeChallengeResponse {
+export interface MakeChallengeResponse extends ConnectedResponse {
     credential: string;
     taskChannelName: string;
     taskQueueName: string;
     tasksLockName: string;
+}
+
+export interface ConnectedRequest {
+    credential: string;
+}
+
+export interface ConnectedResponse {
     clientInfo: {
         flags: string[];
         commands: string;
@@ -33,5 +45,3 @@ export interface MakeChallengeResponse {
         channels: string[];
     };
 }
-
-export type SDKResponse<T> = Promise<SDKResponseData<T>>;

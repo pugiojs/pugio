@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { Service } from 'typedi';
 import { RequestService } from '@pugio/request';
 import {
+    ConnectedRequest,
+    ConnectedResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
     SDKOptions,
@@ -27,6 +29,7 @@ export class SDKService {
             hostname = 'pugio.lenconda.top',
             apiVersion = 1,
             onMessage: messageHandler,
+            onError: errorHandler,
         } = this.options;
 
         this.requestService.initialize(
@@ -62,6 +65,9 @@ export class SDKService {
 
                     if (responseStatus >= 300) {
                         data.error = responseContent;
+                        if (_.isFunction(errorHandler)) {
+                            errorHandler(new Error(responseContent.message));
+                        }
                     } else {
                         data.response = responseContent;
                     }
@@ -76,5 +82,11 @@ export class SDKService {
         return await this.requestService
             .getInstance()
             .post('/client/challenge', options);
+    }
+
+    public async connected(options: ConnectedRequest): SDKResponse<ConnectedResponse> {
+        return await this.requestService
+            .getInstance()
+            .post('/client/connected', options);
     }
 }

@@ -28,6 +28,11 @@ export class ExecutionService {
     }
 
     public executeTask(executionTask: ExecutionTask) {
-        // const execution = child_process.spawn()
+        // TODO
+        /**
+         * 1. decrypt AES key with private key
+         * 2. decrypt executionTask.executionData with AES key
+         * 3. spawn a new child process
+         */
     }
 }
