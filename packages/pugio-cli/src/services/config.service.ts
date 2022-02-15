@@ -7,6 +7,7 @@ import {
     dataDir,
     configFile as defaultConfigFile,
     pidFile,
+    pathResolveKeyList,
 } from '../defaults';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
@@ -21,6 +22,7 @@ abstract class AbstractConfig {
 @Service()
 export class ConfigService extends AbstractConfig implements AbstractConfig {
     private defaultConfigFilePathname: string;
+    private defaultConfig: CLIConfig = {};
 
     public constructor(
         private readonly utilsService: UtilsService,
@@ -35,6 +37,7 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
         this.ensureConfigFile();
 
         this.config = this.readConfig(this.defaultConfigFilePathname);
+        this.defaultConfig = _.cloneDeep(this.config);
     }
 
     public mergeUserConfig(configFilePathname: string) {
@@ -44,15 +47,31 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
     }
 
     public setConfig(pathname: string, value: any) {
-        this.config = _.set(this.config, pathname, value);
-    }
+        let configValue = value;
 
-    public getConfig(pathname?: string) {
-        if (!_.isString(pathname)) {
-            return _.cloneDeep(this.config) as CLIConfig;
+        if (
+            _.isString(value) &&
+            pathResolveKeyList.indexOf(pathname) !== -1
+        ) {
+            configValue = path.resolve(process.cwd(), value);
         }
 
-        return _.cloneDeep(_.get(this.config, pathname));
+        this.defaultConfig = _.set(this.config, pathname, configValue);
+        fs.writeFileSync(
+            this.defaultConfigFilePathname,
+            JSON.stringify(this.defaultConfig, null, 4),
+            {
+                encoding: 'utf-8',
+            },
+        );
+    }
+
+    public getConfig<T>(pathname?: string): T {
+        if (!_.isString(pathname)) {
+            return _.cloneDeep(this.config) as T;
+        }
+
+        return _.cloneDeep(_.get(this.config, pathname)) as T;
     }
 
     public getPidFilePathname() {
@@ -69,6 +88,26 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
                 encoding: 'utf-8',
             });
         }
+    }
+
+    public getMappedConfig(mapper: Record<string, string>) {
+        if (!_.isObject(mapper)) {
+            return {};
+        }
+
+        const result = Object.keys(mapper).reduce((result, pathname) => {
+            const originalPathname = mapper[pathname];
+
+            if (!_.isString(originalPathname)) {
+                return result;
+            }
+
+            const value = this.getConfig(originalPathname);
+
+            return _.set(result, pathname, value);
+        }, {});
+
+        return result;
     }
 
     private readConfig(pathname?: string) {

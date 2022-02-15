@@ -16,7 +16,7 @@ export class ConnectionService extends AbstractConnection implements AbstractCon
     private options: RedisConnectionOptions = {};
     private connectedFlag = false;
 
-    public initialize(options: RedisClientOptions = {}) {
+    public initialize(options: RedisConnectionOptions = {}) {
         this.options = options;
     }
 

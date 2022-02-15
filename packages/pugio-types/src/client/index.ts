@@ -1,7 +1,6 @@
-import { SDKOptions } from '../sdk';
 import {
     RedisClient,
-    RedisClientOptions,
+    RedisConnectionOptions,
 } from '../redis';
 
 export type ClientMessageLevel = 'info' | 'warn' | 'error';
@@ -20,7 +19,7 @@ export interface ClientOptions {
     privateKey?: string;
     hostname?: string;
     apiVersion?: number;
-    redisOptions?: RedisClientOptions;
+    redisOptions?: RedisConnectionOptions;
     onMessage?: ClientMessageHandler;
 }
 

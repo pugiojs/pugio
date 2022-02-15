@@ -41,8 +41,8 @@ export class ClientService {
             apiKey,
             publicKey,
             privateKey,
-            hostname,
-            apiVersion,
+            hostname = 'pugio.lenconda.top',
+            apiVersion = 1,
             redisOptions = {},
             onMessage: messageHandler,
         } = this.options;

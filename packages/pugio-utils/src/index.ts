@@ -158,5 +158,21 @@ export class UtilsService {
             fs.removeSync(dirname);
             fs.mkdirpSync(dirname);
         }
-    };
+    }
+
+    public permanentlyReadFileSync(pathname): string {
+        if (
+            !_.isString(pathname) ||
+            !fs.existsSync(pathname) ||
+            !fs.statSync(pathname).isFile()
+        ) {
+            return null;
+        }
+
+        try {
+            return fs.readFileSync(pathname).toString();
+        } catch (e) {
+            return null;
+        }
+    }
 }

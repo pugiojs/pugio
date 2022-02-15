@@ -3,7 +3,7 @@ import { Container } from 'typedi';
 import { ClientService } from './client.service';
 
 export class Client {
-    public constructor(protected readonly options: ClientOptions) {}
+    public constructor(protected readonly options: ClientOptions = {}) {}
 
     public getInstance() {
         const instance = Container.get(ClientService);

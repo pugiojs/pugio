@@ -7,8 +7,10 @@ import {
     pidFile,
     dataDir,
 } from '../defaults';
+import { LoggerService } from '../services/logger.service';
 
 const processService = Container.get<ProcessService>(ProcessService);
+const loggerService = Container.get<LoggerService>(LoggerService);
 processService.setPIDFilePathname(path.join(dataDir, pidFile));
 
 export const startClient = async () => {
@@ -18,7 +20,7 @@ export const startClient = async () => {
         !fs.existsSync(modulePathname) ||
         !fs.statSync(modulePathname).isFile()
     ) {
-        // TODO
+        loggerService.error('Cannot find execution module:' + modulePathname);
         process.exit(1);
     }
 
@@ -29,5 +31,9 @@ export const startClient = async () => {
 
 export const stopClient = async () => {
     const result = processService.killProcess();
-    // TODO log
+    if (result) {
+        loggerService.info('Client daemon stopped');
+    } else {
+        loggerService.error('Client daemon cannot stop');
+    }
 };
