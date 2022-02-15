@@ -1,10 +1,7 @@
 import 'reflect-metadata';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-    Container,
-    Service,
-} from 'typedi';
+import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
 import { ProcessService } from '../services/process.service';
 import {
@@ -21,6 +18,7 @@ export class ClientCommand extends AbstractCommand implements AbstractCommand {
     public constructor(
         private readonly processService: ProcessService,
         private readonly loggerService: LoggerService,
+        private readonly utilsService: UtilsService,
     ) {
         super();
         this.setCommandName('client');
@@ -69,8 +67,7 @@ export class ClientCommand extends AbstractCommand implements AbstractCommand {
             process.exit(1);
         }
 
-        const utilsService = Container.get<UtilsService>(UtilsService);
-        const childProcess = await utilsService.daemonize(
+        const childProcess = await this.utilsService.daemonize(
             './daemon.js',
             (
                 _.isString(configFilePathname)

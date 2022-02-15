@@ -12,6 +12,7 @@ import { Service } from 'typedi';
 import { ConnectionService } from '@pugio/connection';
 import { SDKService } from '@pugio/sdk';
 import { machineIdSync } from 'node-machine-id';
+import * as yup from 'yup';
 
 @Service()
 export class ClientService {
@@ -33,7 +34,7 @@ export class ClientService {
     ) {
     }
 
-    public initialize(options: ClientOptions) {
+    public async initialize(options: ClientOptions) {
         this.machineId = machineIdSync();
         this.options = options;
 
@@ -47,6 +48,27 @@ export class ClientService {
             redisOptions = {},
             onMessage: messageHandler,
         } = this.options;
+
+        const partialOptionsSchema = yup.object().shape({
+            clientId: yup.string().required(),
+            apiKey: yup.string().required(),
+            publicKey: yup.string().required(),
+            privateKey: yup.string().required(),
+        });
+
+        if (
+            !(await partialOptionsSchema.isValid({
+                clientId,
+                apiKey,
+                publicKey,
+                privateKey,
+            }))
+        ) {
+            this.messageHandler({
+                level: 'error',
+                data: 'Invalid client options',
+            });
+        }
 
         this.apiKey = apiKey;
         this.clientId = clientId;

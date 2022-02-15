@@ -35,5 +35,5 @@ utilsService.keepalive(async () => {
         privateKey: utilsService.permanentlyReadFileSync(configService.getConfig('client.privateKey')),
     });
 
-    client.getInstance().run();
+    (await client.getInstance()).run();
 });

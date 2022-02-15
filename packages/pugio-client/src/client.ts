@@ -5,9 +5,9 @@ import { ClientService } from './client.service';
 export class Client {
     public constructor(protected readonly options: ClientOptions = {}) {}
 
-    public getInstance() {
+    public async getInstance() {
         const instance = Container.get(ClientService);
-        instance.initialize(this.options);
+        await instance.initialize(this.options);
         return instance;
     }
 }
