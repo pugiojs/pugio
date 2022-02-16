@@ -125,9 +125,9 @@ export class UtilsService {
 
     public async daemonize(script: string, args: string[] = [], options: child_process.ForkOptions = {}) {
         const child = child_process.fork(script, args, {
+            stdio: 'ignore',
             ...options,
             detached: true,
-            stdio: 'ignore',
         });
         child.unref();
         return child;
@@ -175,5 +175,13 @@ export class UtilsService {
         } catch (e) {
             return null;
         }
+    }
+
+    public transformURLSearchParamsToObject(params: URLSearchParams): Record<string, any> {
+        const result = {};
+        for(const [key, value] of params.entries()) {
+            result[key] = value;
+        }
+        return result;
     }
 }

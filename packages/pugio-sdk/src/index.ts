@@ -4,6 +4,8 @@ import { RequestService } from '@pugio/request';
 import {
     ConnectedRequest,
     ConnectedResponse,
+    ConsumeExecutionTaskRequest,
+    ConsumeExecutionTaskResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
     SDKOptions,
@@ -81,12 +83,30 @@ export class SDKService {
     public async makeChallenge(options: MakeChallengeRequest): SDKResponse<MakeChallengeResponse> {
         return await this.requestService
             .getInstance()
-            .post('/client/challenge', options);
+            .request({
+                method: 'post',
+                url: '/client/challenge',
+                data: options,
+            });
     }
 
     public async connected(options: ConnectedRequest): SDKResponse<ConnectedResponse> {
         return await this.requestService
             .getInstance()
-            .post('/client/connected', options);
+            .request({
+                method: 'post',
+                url: '/client/connected',
+                data: options,
+            });
+    }
+
+    public async consumeExecutionTask(options: ConsumeExecutionTaskRequest = {}): SDKResponse<ConsumeExecutionTaskResponse> {
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'get',
+                url: '/task/consume',
+                query: options,
+            });
     }
 }

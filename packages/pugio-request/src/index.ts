@@ -1,7 +1,11 @@
 import 'reflect-metadata';
-import { Axios } from 'axios';
-import { Service } from 'typedi';
 import {
+    Axios,
+    AxiosResponse,
+} from 'axios';
+import Container, { Service } from 'typedi';
+import {
+    RequestConfig,
     RequestOptions,
     ResponseGetInstanceOptions,
 } from '@pugio/types';
@@ -9,10 +13,38 @@ import {
     UtilsService,
 } from '@pugio/utils';
 import * as _ from 'lodash';
+import * as querystring from 'querystring';
+
+const utilsService = Container.get(UtilsService);
+
+export class Request extends Axios {
+    public request<T = any, R = AxiosResponse<T>, D = any>(config: RequestConfig<D> = {}): Promise<R> {
+        const { query = {}, url = '' } = config;
+        config.query = utilsService.transformDTOToDAO(query);
+        const [pathname, urlSearch = ''] = url.split('?');
+        const urlSearchParams = utilsService.transformURLSearchParamsToObject(new URLSearchParams(urlSearch));
+
+        const queryObject = {
+            ...urlSearchParams,
+            ...query,
+        };
+
+        const newUrl = pathname +
+            (
+                Object.keys(queryObject).length > 0
+                    ? `?${querystring.stringify(utilsService.transformDTOToDAO(queryObject))}`
+                    : ''
+            );
+
+        config.url = newUrl;
+
+        return super.request.call(this, _.omit(config, 'query'));
+    };
+}
 
 @Service()
 export class RequestService {
-    protected instance: Axios;
+    protected instance: Request;
     private json: boolean;
     private transformCase: boolean;
 
@@ -22,7 +54,7 @@ export class RequestService {
 
     public initialize(
         options: RequestOptions = {},
-        instanceModifier?: (instance: Axios) => void,
+        instanceModifier?: (instance: Request) => void,
     ) {
         const {
             clientKey = '',
@@ -35,7 +67,7 @@ export class RequestService {
         this.json = json;
         this.transformCase = transformCase;
 
-        this.instance = new Axios({
+        this.instance = new Request({
             responseEncoding: 'utf8',
             responseType: 'json',
             transformRequest: [

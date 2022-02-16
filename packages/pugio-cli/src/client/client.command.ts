@@ -74,6 +74,14 @@ export class ClientCommand extends AbstractCommand implements AbstractCommand {
                     ? [configFilePathname]
                     : []
             ),
+            {
+                stdio: [
+                    0,
+                    fs.openSync(path.resolve(dataDir, 'pugio.log'), 'w'),
+                    fs.openSync(path.resolve(dataDir, 'pugio-errors.log'), 'w'),
+                    'ipc',
+                ],
+            },
         );
         this.processService.writePIDFile(childProcess.pid);
     }

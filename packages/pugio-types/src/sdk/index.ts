@@ -1,3 +1,4 @@
+import { ExecutionTask } from '../execution';
 import { ClientMessageHandler } from '../client';
 
 export type SDKErrorHandler = (error: Error) => void;
@@ -45,3 +46,10 @@ export interface ConnectedResponse {
         channels: string[];
     };
 }
+
+export interface ConsumeExecutionTaskRequest {
+    all?: number;
+    lockPass?: string;
+}
+
+export type ConsumeExecutionTaskResponse = Array<ExecutionTask>;

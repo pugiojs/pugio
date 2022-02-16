@@ -13,6 +13,7 @@ import { ConnectionService } from '@pugio/connection';
 import { SDKService } from '@pugio/sdk';
 import { machineIdSync } from 'node-machine-id';
 import * as yup from 'yup';
+import { ExecutionService } from '@pugio/execution';
 
 @Service()
 export class ClientService {
@@ -31,6 +32,7 @@ export class ClientService {
         private readonly connectionService: ConnectionService,
         private readonly utilsService: UtilsService,
         private readonly sdkService: SDKService,
+        private readonly executionService: ExecutionService,
     ) {
     }
 
@@ -130,19 +132,37 @@ export class ClientService {
         this.connectionService.connect();
     }
 
-    // private async consumeTask(lockPass: string) {
-    //     const data = await this.redisClient.LPOP(this.clientTaskQueueName);
-    //     // TODO parse data
-    //     return data;
-    // }
-
     private async handleClientReady(channelName: string) {
-        this.redisClient.subscribe(channelName, (lockPass) => {
+        this.messageHandler({
+            level: 'info',
+            data: 'Channel connected',
+        });
+
+        this.redisClient.subscribe(channelName, async (lockPass) => {
             this.messageHandler({
                 level: 'info',
-                data: 'Received task',
+                data: `Received task with lock: ${lockPass}`,
             });
-            // TODO consume task with `lockPass`
+
+            const { response: executionTasks } = await this.sdkService.consumeExecutionTask({
+                lockPass,
+            });
+
+            if (executionTasks) {
+                this.messageHandler({
+                    level: 'info',
+                    data: `Get ${executionTasks.length} task(s)`,
+                });
+            }
+
+            for (const executionTask of executionTasks) {
+                this.messageHandler({
+                    level: 'info',
+                    data: `Execute task ${executionTask.id}`,
+                });
+
+                this.executionService.executeTask(executionTask);
+            }
         });
     }
 }

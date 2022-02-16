@@ -12,3 +12,7 @@ export interface RequestOptions {
 export interface ResponseGetInstanceOptions {
     json?: boolean;
 }
+
+export interface RequestConfig<D> extends AxiosRequestConfig<D> {
+    query?: Record<string, any>;
+}

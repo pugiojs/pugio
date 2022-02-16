@@ -25,6 +25,7 @@
     },
     "dependencies": {
         "@pugio/connection": "^1.0.0",
+        "@pugio/execution": "^1.0.0",
         "@pugio/sdk": "^1.0.0",
         "@pugio/types": "^1.0.0",
         "@pugio/utils": "^1.0.0",
