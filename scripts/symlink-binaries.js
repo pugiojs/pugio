@@ -31,9 +31,9 @@ const symlink = (action = 'create') => {
                     continue;
                 }
 
-                fs.chmodSync(symlinkPathname, 777);
                 console.log('[SYMLINK][CREATE]', `${targetPathname} -> ${symlinkPathname}`);
                 fs.symlinkSync(targetPathname, symlinkPathname);
+                fs.chmodSync(symlinkPathname, 777);
             } else if (action === 'remove') {
                 if (!fs.existsSync(symlinkPathname)) {
                     console.log('[SYMLINK][REMOVE] skip', `${targetPathname} -> ${symlinkPathname}`);
