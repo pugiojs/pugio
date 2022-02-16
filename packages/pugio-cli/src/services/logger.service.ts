@@ -18,6 +18,10 @@ export class LoggerService {
         this.baseLog(message, level);
     }
 
+    public singleLog(message: string) {
+        this.logger.log(message);
+    }
+
     protected baseLog(message: string, level = 'info') {
         if (!_.isString(message)) {
             return;

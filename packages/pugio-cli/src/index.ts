@@ -6,9 +6,12 @@ import * as commander from 'commander';
  * command classes
  */
 import { ClientCommand } from './client/client.command';
+import { KeygenCommand } from './keygen/keygen.command';
+import { AbstractCommand } from './command.abstract';
 
 const commands = [
     ClientCommand,
+    KeygenCommand,
 ];
 
 initialize();
@@ -16,7 +19,7 @@ initialize();
 const program = new commander.Command();
 
 for (const Command of commands) {
-    const command = Container.get(Command);
+    const command = Container.get<AbstractCommand>(Command);
     command.initialize(program);
     command.register();
 }
