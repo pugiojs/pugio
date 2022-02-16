@@ -10,7 +10,7 @@ import {
 export class Execution {
     private sequence = 0;
     private script: string;
-    private commands: string[];
+    private commands: string[] = [];
 
     public constructor(
         private readonly cwd: string,
@@ -48,7 +48,7 @@ export class Execution {
 
         const executionProcess = child_process.spawn(this.commands[0], this.commands.slice(1), {
             cwd: this.cwd,
-            stdio: 'inherit',
+            stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
         });
 
         executionProcess.on('close', () => {

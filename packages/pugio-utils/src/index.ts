@@ -21,13 +21,12 @@ export class UtilsService {
         });
     };
 
-    public decryptTaskAesKey(encryptedAesKey: string, privateKeyPathname: string) {
-        const privateKey = this.permanentlyReadFileSync(privateKeyPathname);
+    public decryptTaskAesKey(encryptedAesKey: string, privateKey: string) {
         const rsaKeyPair = new NodeRSA({
             b: 1024,
         }).importKey(privateKey, 'pkcs8-private-pem');
         const decryptedAesKey = rsaKeyPair.decrypt(encryptedAesKey, 'base64');
-        return decryptedAesKey;
+        return Buffer.from(decryptedAesKey, 'base64').toString();
     }
 
     public decryptExecutionData(executionData: string, aesKey: string) {
@@ -161,7 +160,7 @@ export class UtilsService {
         }
     }
 
-    public permanentlyReadFileSync(pathname): string {
+    public permanentlyReadFileSync(pathname: string): string {
         if (
             !_.isString(pathname) ||
             !fs.existsSync(pathname) ||

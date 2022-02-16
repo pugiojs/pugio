@@ -1,17 +1,19 @@
 import { initialize } from './initialize';
 import Container from 'typedi';
 import * as commander from 'commander';
+import { AbstractCommand } from './command.abstract';
 
 /**
  * command classes
  */
 import { ClientCommand } from './client/client.command';
 import { KeygenCommand } from './keygen/keygen.command';
-import { AbstractCommand } from './command.abstract';
+import { ConfigCommand } from './config/config.command';
 
 const commands = [
     ClientCommand,
     KeygenCommand,
+    ConfigCommand,
 ];
 
 initialize();

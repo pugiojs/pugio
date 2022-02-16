@@ -169,7 +169,7 @@ export class ClientService {
                     });
                     this.messageHandler({
                         level: 'info',
-                        data: `Push execution record of task ${taskId}`,
+                        data: `Push execution record of task ${taskId}, sequence: ${sequence}, status: ${status}`,
                     });
                 } catch {}
             },

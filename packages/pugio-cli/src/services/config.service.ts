@@ -11,6 +11,7 @@ import {
 } from '../defaults';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
+import * as os from 'os';
 
 abstract class AbstractConfig {
     protected config: CLIConfig = {};
@@ -53,10 +54,15 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
             _.isString(value) &&
             pathResolveKeyList.indexOf(pathname) !== -1
         ) {
-            configValue = path.resolve(process.cwd(), value);
+            configValue = path.resolve(
+                process.cwd(),
+                value.replace(/^~/g, os.homedir()),
+            );
         }
 
-        this.defaultConfig = _.set(this.config, pathname, configValue);
+        this.defaultConfig = _.set(this.defaultConfig, pathname, configValue);
+        this.config = _.merge(this.defaultConfig, this.config);
+
         fs.writeFileSync(
             this.defaultConfigFilePathname,
             JSON.stringify(this.defaultConfig, null, 4),

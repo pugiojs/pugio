@@ -16,7 +16,6 @@ export const EXECUTION_SCRIPT_DIR = path.resolve(os.homedir(), './.pugio-executi
 
 @Service()
 export class ExecutionService {
-    private publicKey: string;
     private privateKey: string;
     private executionResultHandler: ExecutionResultHandler = _.noop;
 
@@ -26,12 +25,10 @@ export class ExecutionService {
 
     public initialize(options: ExecutionOptions) {
         const {
-            publicKey,
             privateKey,
             onExecutionResult,
         } = options;
 
-        this.publicKey = publicKey;
         this.privateKey = privateKey;
 
         if (_.isFunction(onExecutionResult)) {
@@ -47,14 +44,31 @@ export class ExecutionService {
             executionData: encryptedExecutionData,
         } = executionTask;
 
-        const aesKey = this.utilsService.decryptTaskAesKey(encryptedAesKey, this.privateKey);
-        const executionDataContent = this.utilsService.decryptExecutionData(encryptedExecutionData, aesKey);
-
         let executionData: DecryptedExecutionData;
+        let aesKey: string;
 
         try {
-            executionData = JSON.parse(executionDataContent);
-        } catch (e) {}
+            aesKey = this.utilsService.decryptTaskAesKey(encryptedAesKey, this.privateKey);
+            const executionDataContent = this.utilsService.decryptExecutionData(encryptedExecutionData, aesKey);
+
+            try {
+                executionData = JSON.parse(executionDataContent);
+            } catch (e) {
+                this.executionResultHandler(
+                    {
+                        status: -2,
+                        taskId: id,
+                    },
+                );
+            }
+        } catch (e) {
+            this.executionResultHandler(
+                {
+                    status: -3,
+                    taskId: id,
+                },
+            );
+        }
 
         const scriptDir = path.resolve(EXECUTION_SCRIPT_DIR, './' + id);
         this.utilsService.ensureDataDir(scriptDir);
@@ -78,7 +92,11 @@ export class ExecutionService {
                         status,
                         taskId: id,
                         data: encryptedContent,
-                        sequence,
+                        ...(
+                            !_.isNumber(sequence)
+                                ? {}
+                                : { sequence }
+                        ),
                     },
                 );
             },
