@@ -13,6 +13,8 @@ export type RedisErrorHandler = (error: Error) => Promise<void>;
 export type RedisClientOptions = OriginalRedisClientOptions<RedisModules, RedisScripts>;
 
 export interface RedisConnectionOptions extends RedisClientOptions {
+    hostname?: string;
+    port?: number;
     pollTimerGap?: number;
     onClientReady?: RedisClientReadyHandler;
     onError?: RedisErrorHandler;

@@ -34,7 +34,14 @@ export class ConnectionService extends AbstractConnection implements AbstractCon
             pollTimerGap = 1000,
             onClientReady: redisClientReadyHandler = _.noop,
             onError: redisErrorHandler = _.noop,
+            hostname = 'pugio.lenconda.top',
+            port = 6379,
+            username = '',
+            password = '',
         } = this.options;
+
+        const url = `redis://${username}${password ? `:${password}` : ''}@${hostname}:${port}`;
+        redisClientOptions.url = url;
 
         while (true) {
             if (!this.connectedFlag) {

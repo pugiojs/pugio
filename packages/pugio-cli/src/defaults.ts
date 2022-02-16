@@ -13,6 +13,8 @@ export const maps = {
         hostname: 'sdk.hostname',
         apiVersion: 'sdk.apiVersion',
         'redisOptions.pollTimerGap': 'connection.pollTimerGap',
+        'redisOptions.port': 'connection.port',
+        'redisOptions.hostname': 'connection.hostname',
     } as Record<keyof Omit<ClientOptions, 'onMessage' | 'redisOptions' | 'publicKey' | 'privateKey'>, string> & Record<string, string>,
 };
 
