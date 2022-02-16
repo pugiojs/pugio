@@ -8,6 +8,8 @@ import {
     ConsumeExecutionTaskResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
+    PushExecutionRecordRequest,
+    PushExecutionRecordResponse,
     SDKOptions,
     SDKResponse,
 } from '@pugio/types';
@@ -107,6 +109,21 @@ export class SDKService {
                 method: 'get',
                 url: '/task/consume',
                 query: options,
+            });
+    }
+
+    public async pushExecutionRecord(options: PushExecutionRecordRequest): SDKResponse<PushExecutionRecordResponse> {
+        const {
+            taskId,
+            ...data
+        } = options;
+
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'post',
+                url: `/task/${taskId}/execution`,
+                data,
             });
     }
 }

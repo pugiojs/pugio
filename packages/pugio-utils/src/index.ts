@@ -37,10 +37,10 @@ export class UtilsService {
             .toString(CryptoJS.enc.Utf8);
     }
 
-    public encryptExecutionData(executionData: string, aesKey: string) {
+    public encryptExecutionResultContent(content: string, aesKey: string) {
         return CryptoJS
             .AES
-            .encrypt(executionData, aesKey)
+            .encrypt(content, aesKey)
             .toString();
     }
 

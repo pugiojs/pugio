@@ -23,11 +23,16 @@ export interface SDKResponseData<T> {
     error?: SDKError;
 }
 
+export interface SDKResponseBaseUnit {
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export interface MakeChallengeRequest {
     deviceId: string;
 }
 
-export interface MakeChallengeResponse extends ConnectedResponse {
+export interface MakeChallengeResponse extends ConnectedResponse, SDKResponseBaseUnit {
     credential: string;
     taskChannelName: string;
     taskQueueName: string;
@@ -38,7 +43,7 @@ export interface ConnectedRequest {
     credential: string;
 }
 
-export interface ConnectedResponse {
+export interface ConnectedResponse extends SDKResponseBaseUnit {
     clientInfo: {
         flags: string[];
         commands: string;
@@ -52,4 +57,15 @@ export interface ConsumeExecutionTaskRequest {
     lockPass?: string;
 }
 
-export type ConsumeExecutionTaskResponse = Array<ExecutionTask>;
+export type ConsumeExecutionTaskResponse = Array<ExecutionTask & SDKResponseBaseUnit>;
+
+export interface PushExecutionRecordRequest {
+    taskId: string;
+    sequence?: number;
+    status?: number;
+    content?: string;
+}
+
+export interface PushExecutionRecordResponse extends SDKResponseBaseUnit {
+    id: string;
+}

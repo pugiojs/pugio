@@ -133,14 +133,14 @@ export class ClientService {
         this.connectionService.connect();
     }
 
-    protected executeTasks(executionTasks: ExecutionTask[]) {
+    protected async executeTasks(executionTasks: ExecutionTask[]) {
         for (const executionTask of executionTasks) {
             this.messageHandler({
                 level: 'info',
                 data: `Execute task ${executionTask.id}`,
             });
 
-            this.executionService.executeTask(executionTask);
+            await this.executionService.executeTask(executionTask);
         }
     }
 
@@ -148,6 +148,31 @@ export class ClientService {
         this.messageHandler({
             level: 'info',
             data: 'Channel connected',
+        });
+
+        const {
+            publicKey,
+            privateKey,
+        } = this;
+
+        this.executionService.initialize({
+            publicKey,
+            privateKey,
+            onExecutionResult: async (result) => {
+                const { taskId, data: content, status, sequence } = result;
+                try {
+                    await this.sdkService.pushExecutionRecord({
+                        taskId,
+                        content,
+                        status,
+                        sequence,
+                    });
+                    this.messageHandler({
+                        level: 'info',
+                        data: `Push execution record of task ${taskId}`,
+                    });
+                } catch {}
+            },
         });
 
         this.redisClient.subscribe(channelName, async (lockPass) => {
@@ -166,7 +191,7 @@ export class ClientService {
                     data: `Got ${executionTasks.length} task(s)`,
                 });
 
-                this.executeTasks(executionTasks);
+                await this.executeTasks(executionTasks);
             }
         });
 
@@ -182,7 +207,7 @@ export class ClientService {
                 data: `Pulled ${remainedExecutionTasks.length} task(s)`,
             });
 
-            this.executeTasks(remainedExecutionTasks);
+            await this.executeTasks(remainedExecutionTasks);
         }
     }
 }
