@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import {
     ClientMessageHandler,
     ClientOptions,
+    ExecutionTask,
     MakeChallengeResponse,
     RedisClient,
     RedisClientOptions,
@@ -132,6 +133,17 @@ export class ClientService {
         this.connectionService.connect();
     }
 
+    protected executeTasks(executionTasks: ExecutionTask[]) {
+        for (const executionTask of executionTasks) {
+            this.messageHandler({
+                level: 'info',
+                data: `Execute task ${executionTask.id}`,
+            });
+
+            this.executionService.executeTask(executionTask);
+        }
+    }
+
     private async handleClientReady(channelName: string) {
         this.messageHandler({
             level: 'info',
@@ -148,21 +160,29 @@ export class ClientService {
                 lockPass,
             });
 
-            if (executionTasks) {
+            if (executionTasks && executionTasks.length > 0) {
                 this.messageHandler({
                     level: 'info',
-                    data: `Get ${executionTasks.length} task(s)`,
-                });
-            }
-
-            for (const executionTask of executionTasks) {
-                this.messageHandler({
-                    level: 'info',
-                    data: `Execute task ${executionTask.id}`,
+                    data: `Got ${executionTasks.length} task(s)`,
                 });
 
-                this.executionService.executeTask(executionTask);
+                this.executeTasks(executionTasks);
             }
         });
+
+        const {
+            response: remainedExecutionTasks,
+        } = await this.sdkService.consumeExecutionTask({
+            all: 1,
+        });
+
+        if (remainedExecutionTasks && remainedExecutionTasks.length > 0) {
+            this.messageHandler({
+                level: 'info',
+                data: `Pulled ${remainedExecutionTasks.length} task(s)`,
+            });
+
+            this.executeTasks(remainedExecutionTasks);
+        }
     }
 }
