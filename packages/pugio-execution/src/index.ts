@@ -62,7 +62,6 @@ export class ExecutionService {
                 );
             }
         } catch (e) {
-            console.log(e);
             this.executionResultHandler(
                 {
                     status: -3,

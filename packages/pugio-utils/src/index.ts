@@ -6,6 +6,8 @@ import _ from 'lodash';
 import {
     DataType,
     CaseStyleType,
+    KeepAliveCallbackFunction,
+    KeepAliveExitHandler,
 } from '@pugio/types';
 import cluster from 'cluster';
 import * as child_process from 'child_process';
@@ -132,14 +134,17 @@ export class UtilsService {
         return child;
     }
 
-    public async keepalive(callbackFn: () => any | Promise<any>) {
+    public async keepalive(callbackFn: KeepAliveCallbackFunction, onExit?: KeepAliveExitHandler) {
         if (
             (_.isBoolean(cluster.isPrimary) && cluster.isPrimary) ||
             (_.isBoolean(cluster.isMaster) && cluster.isMaster)
         ) {
             cluster.fork();
 
-            cluster.on('exit', () => {
+            cluster.on('exit', async () => {
+                if (_.isFunction(onExit)) {
+                    await onExit();
+                }
                 cluster.fork();
             });
         }
