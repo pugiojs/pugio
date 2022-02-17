@@ -35,9 +35,7 @@ export interface MakeChallengeRequest {
 
 export interface MakeChallengeResponse extends ConnectedResponse, SDKResponseBaseUnit {
     credential: string;
-    taskChannelName: string;
-    taskQueueName: string;
-    tasksLockName: string;
+    channels: string[];
 }
 
 export interface ConnectedRequest {

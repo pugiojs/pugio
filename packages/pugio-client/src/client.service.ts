@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import {
     ClientMessageHandler,
     ClientOptions,
-    ExecutionTask,
     MakeChallengeResponse,
     RedisClient,
     RedisClientOptions,
@@ -17,6 +16,7 @@ import * as yup from 'yup';
 import { ExecutionService } from '@pugio/execution';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { ChannelService } from './channel.service';
 
 @Service()
 export class ClientService {
@@ -36,8 +36,8 @@ export class ClientService {
         private readonly utilsService: UtilsService,
         private readonly sdkService: SDKService,
         private readonly executionService: ExecutionService,
-    ) {
-    }
+        private readonly channelService: ChannelService,
+    ) {}
 
     public async initialize(options: ClientOptions) {
         this.machineId = machineIdSync();
@@ -85,6 +85,8 @@ export class ClientService {
             this.messageHandler = messageHandler;
         }
 
+        this.channelService.initialize(this.messageHandler);
+
         this.clientKey = this.utilsService.generateClientKey(this.apiKey, this.clientId);
 
         this.sdkService.initialize({
@@ -122,7 +124,7 @@ export class ClientService {
 
         const {
             credential,
-            taskChannelName,
+            channels = [],
         } = response;
 
         this.connectionService.initialize({
@@ -133,7 +135,7 @@ export class ClientService {
                 if (client.isOpen) {
                     this.redisClient = client;
                     await this.sdkService.connected({ credential });
-                    this.handleClientReady(taskChannelName);
+                    this.handleClientReady(channels);
                 }
             },
             onError: async (error) => {
@@ -147,22 +149,13 @@ export class ClientService {
         this.connectionService.connect();
     }
 
-    protected async executeTasks(executionTasks: ExecutionTask[]) {
-        for (const executionTask of executionTasks) {
-            this.messageHandler({
-                level: 'info',
-                data: `Execute task ${executionTask.id}`,
-            });
-
-            await this.executionService.executeTask(executionTask);
-        }
-    }
-
-    private async handleClientReady(channelName: string) {
+    private async handleClientReady(channels: string[]) {
         this.messageHandler({
             level: 'info',
             data: 'Channel connected',
         });
+
+        this.channelService.setRedisClient(this.redisClient);
 
         const {
             publicKey,
@@ -189,24 +182,8 @@ export class ClientService {
             },
         });
 
-        this.redisClient.subscribe(channelName, async (lockPass) => {
-            this.messageHandler({
-                level: 'info',
-                data: `Received task with lock: ${lockPass}`,
-            });
-
-            const { response: executionTasks } = await this.sdkService.consumeExecutionTask({
-                lockPass,
-            });
-
-            if (executionTasks && executionTasks.length > 0) {
-                this.messageHandler({
-                    level: 'info',
-                    data: `Got ${executionTasks.length} task(s)`,
-                });
-
-                await this.executeTasks(executionTasks);
-            }
+        channels.forEach((channelName) => {
+            this.channelService.subscribeChannel(channelName);
         });
 
         const {
@@ -221,7 +198,7 @@ export class ClientService {
                 data: `Pulled ${remainedExecutionTasks.length} task(s)`,
             });
 
-            await this.executeTasks(remainedExecutionTasks);
+            await this.channelService.executeTasks(remainedExecutionTasks);
         }
     }
 }
