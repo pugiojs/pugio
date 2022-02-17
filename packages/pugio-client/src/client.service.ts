@@ -15,6 +15,8 @@ import { SDKService } from '@pugio/sdk';
 import { machineIdSync } from 'node-machine-id';
 import * as yup from 'yup';
 import { ExecutionService } from '@pugio/execution';
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
 @Service()
 export class ClientService {
@@ -100,9 +102,21 @@ export class ClientService {
     }
 
     public async run() {
+        let version;
+
+        try {
+            const packageJson = fs.readJsonSync(path.resolve(__dirname, '../package.json'));
+            version = packageJson.version || '';
+            this.messageHandler({
+                level: 'info',
+                data: `Client version: ${version}`,
+            });
+        } catch (e) {}
+
         const {
             response = {} as MakeChallengeResponse,
         } = await this.sdkService.makeChallenge({
+            version,
             deviceId: this.machineId,
         });
 

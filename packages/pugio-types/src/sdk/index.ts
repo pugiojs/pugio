@@ -29,6 +29,7 @@ export interface SDKResponseBaseUnit {
 }
 
 export interface MakeChallengeRequest {
+    version?: string;
     deviceId: string;
 }
 
