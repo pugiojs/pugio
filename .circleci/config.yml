@@ -3,11 +3,11 @@ version: 2
 aliases: [
   &dependency-paths [
     "node_modules",
-    "packages/pugio-client/node_modules",
+    "packages",
     "checksum.txt",
   ],
   &output-paths [
-    "packages/pugio-client/node_modules",
+    "packages",
     "checksum.txt",
   ],
 ]
