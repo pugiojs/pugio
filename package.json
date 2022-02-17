@@ -12,7 +12,7 @@
         "symlink-packages": "node scripts/symlink-packages.js",
         "clean": "node scripts/clean.js",
         "chmod": "node scripts/chmod.js",
-        "postinstall": "lerna bootstrap && npm run build && npm run chmod"
+        "postinstall": "npm run chmod"
     },
     "devDependencies": {
         "@types/jest": "^26.0.23",
