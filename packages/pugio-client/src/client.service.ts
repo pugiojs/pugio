@@ -85,7 +85,10 @@ export class ClientService {
             this.messageHandler = messageHandler;
         }
 
-        this.channelService.initialize(this.messageHandler);
+        this.channelService.initialize({
+            clientId: this.clientId,
+            messageHandler: this.messageHandler,
+        });
 
         this.clientKey = this.utilsService.generateClientKey(this.apiKey, this.clientId);
 

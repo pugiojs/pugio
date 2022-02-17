@@ -8,6 +8,7 @@ import {
     ConsumeExecutionTaskResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
+    PushClientResponseRequest,
     PushExecutionRecordRequest,
     PushExecutionRecordResponse,
     SDKOptions,
@@ -123,6 +124,23 @@ export class SDKService {
             .request({
                 method: 'post',
                 url: `/task/${taskId}/execution`,
+                data,
+            });
+    }
+
+    public async pushClientResponse(options: PushClientResponseRequest): SDKResponse<any> {
+        const {
+            clientId,
+            scope,
+            requestId,
+            data,
+        } = options;
+
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'post',
+                url: `/client/${clientId}/response/${scope}/${requestId}`,
                 data,
             });
     }

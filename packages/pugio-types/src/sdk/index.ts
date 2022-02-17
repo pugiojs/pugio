@@ -68,3 +68,10 @@ export interface PushExecutionRecordRequest {
 export interface PushExecutionRecordResponse extends SDKResponseBaseUnit {
     id: string;
 }
+
+export interface PushClientResponseRequest {
+    clientId: string;
+    scope: string;
+    requestId: string;
+    data: any;
+}
