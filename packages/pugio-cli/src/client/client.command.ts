@@ -63,12 +63,20 @@ export class ClientCommand extends AbstractCommand implements AbstractCommand {
             !fs.existsSync(modulePathname) ||
             !fs.statSync(modulePathname).isFile()
         ) {
-            this.loggerService.error('Cannot find execution module:' + modulePathname);
+            this.loggerService.singleLog('Error: Cannot find execution module:' + modulePathname);
+            process.exit(1);
+        }
+
+        if (await this.processService.checkProcessAlive()) {
+            this.loggerService.singleLog(
+                'Error: Client still alive with PID ' +
+                this.processService.getProcessPID().toString(),
+            );
             process.exit(1);
         }
 
         const childProcess = await this.utilsService.daemonize(
-            './daemon.js',
+            modulePathname,
             (
                 _.isString(configFilePathname)
                     ? [configFilePathname]
@@ -77,21 +85,26 @@ export class ClientCommand extends AbstractCommand implements AbstractCommand {
             {
                 stdio: [
                     0,
-                    fs.openSync(path.resolve(dataDir, 'pugio.log'), 'w'),
-                    fs.openSync(path.resolve(dataDir, 'pugio-errors.log'), 'w'),
+                    fs.openSync(path.resolve(dataDir, 'pugio.log'), 'a'),
+                    fs.openSync(path.resolve(dataDir, 'pugio-errors.log'), 'a'),
                     'ipc',
                 ],
             },
         );
+
         this.processService.writePIDFile(childProcess.pid);
+
+        this.loggerService.singleLog('Client started with PID ' + childProcess.pid);
+
+        process.exit(0);
     }
 
     private async stopClient() {
         const result = this.processService.killProcess();
         if (result) {
-            this.loggerService.info('Client daemon stopped');
+            this.loggerService.singleLog('Client stopped');
         } else {
-            this.loggerService.error('Client daemon cannot stop');
+            this.loggerService.singleLog('Client cannot stop');
         }
     }
 }

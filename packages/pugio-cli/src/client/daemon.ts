@@ -17,6 +17,9 @@ utilsService.keepalive(async () => {
         configService.mergeUserConfig(userConfigFilePathname);
     }
 
+    const publicKey = utilsService.permanentlyReadFileSync(configService.getConfig('client.publicKey'));
+    const privateKey = utilsService.permanentlyReadFileSync(configService.getConfig('client.privateKey'));
+
     const client = new Client({
         ...configService.getMappedConfig(maps.cliToClient),
         onMessage: (message) => {
@@ -31,8 +34,8 @@ utilsService.keepalive(async () => {
                 process.exit(2);
             }
         },
-        publicKey: utilsService.permanentlyReadFileSync(configService.getConfig('client.publicKey')),
-        privateKey: utilsService.permanentlyReadFileSync(configService.getConfig('client.privateKey')),
+        publicKey,
+        privateKey,
     });
 
     (await client.getInstance()).run();
