@@ -8,8 +8,8 @@ import {
     ConsumeExecutionTaskResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
-    PushClientResponseRequest,
-    PushClientResponseResponse,
+    PushChannelResponseRequest,
+    PushChannelResponseResponse,
     PushExecutionRecordRequest,
     PushExecutionRecordResponse,
     ReportClientStatusRequest,
@@ -131,7 +131,7 @@ export class SDKService {
             });
     }
 
-    public async pushClientResponse(options: PushClientResponseRequest): SDKResponse<PushClientResponseResponse> {
+    public async pushChannelResponse(options: PushChannelResponseRequest): SDKResponse<PushChannelResponseResponse> {
         const {
             clientId,
             scope,

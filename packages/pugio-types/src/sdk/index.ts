@@ -88,14 +88,14 @@ export interface PushExecutionRecordResponse extends SDKResponseBaseUnit {
     id: string;
 }
 
-export interface PushClientResponseRequest {
+export interface PushChannelResponseRequest {
     clientId: string;
     scope: string;
     requestId: string;
     data: any;
 }
 
-export interface PushClientResponseResponse {
+export interface PushChannelResponseResponse {
     accepted: boolean;
 }
 

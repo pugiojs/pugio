@@ -75,7 +75,7 @@ export class ChannelService {
         if (_.isFunction(pipeFn)) {
             const result = (await pipeFn(data.options)) || {};
 
-            await this.sdkService.pushClientResponse({
+            await this.sdkService.pushChannelResponse({
                 requestId: data.id,
                 scope,
                 clientId: this.clientId,
