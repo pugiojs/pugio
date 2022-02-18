@@ -47,6 +47,10 @@ export class ClientCommand extends AbstractCommand implements AbstractCommand {
                         this.stopClient();
                         break;
                     }
+                    case 'restart': {
+                        this.stopClient().then(() => this.startClient());
+                        break;
+                    }
                     default: {
                         break;
                     }
