@@ -9,8 +9,11 @@ import {
     MakeChallengeRequest,
     MakeChallengeResponse,
     PushClientResponseRequest,
+    PushClientResponseResponse,
     PushExecutionRecordRequest,
     PushExecutionRecordResponse,
+    ReportClientStatusRequest,
+    ReportClientStatusResponse,
     SDKOptions,
     SDKResponse,
 } from '@pugio/types';
@@ -128,7 +131,7 @@ export class SDKService {
             });
     }
 
-    public async pushClientResponse(options: PushClientResponseRequest): SDKResponse<any> {
+    public async pushClientResponse(options: PushClientResponseRequest): SDKResponse<PushClientResponseResponse> {
         const {
             clientId,
             scope,
@@ -142,6 +145,16 @@ export class SDKService {
                 method: 'post',
                 url: `/client/${clientId}/response/${scope}/${requestId}`,
                 data,
+            });
+    }
+
+    public async reportClientStatus(options: ReportClientStatusRequest): SDKResponse<ReportClientStatusResponse> {
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'post',
+                url: '/client_status',
+                data: options,
             });
     }
 }

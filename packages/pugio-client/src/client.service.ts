@@ -108,6 +108,7 @@ export class ClientService {
 
     public async run() {
         let version;
+        let intervalId: ReturnType<typeof setInterval>;
 
         try {
             const packageJson = fs.readJsonSync(path.resolve(__dirname, '../package.json'));
@@ -138,8 +139,15 @@ export class ClientService {
                 if (client.isOpen) {
                     this.redisClient = client;
                     await this.sdkService.connected({ credential });
-                    this.handleClientReady(channels);
+                    intervalId = await this.handleClientReady(channels);
                 }
+            },
+            onClientDown: () => {
+                clearInterval(intervalId);
+                this.messageHandler({
+                    level: 'info',
+                    data: 'Client connection down',
+                });
             },
             onError: async (error) => {
                 this.messageHandler({
@@ -153,6 +161,14 @@ export class ClientService {
     }
 
     private async handleClientReady(channels: string[]) {
+        const intervalId = setInterval(() => {
+            const plaintext = Math.random().toString(32).slice(2);
+            this.sdkService.reportClientStatus({
+                plaintext,
+                cipher: this.utilsService.encryptContentWithRSAPublicKey(plaintext, this.publicKey),
+            });
+        }, 60000);
+
         this.messageHandler({
             level: 'info',
             data: 'Channel connected',
@@ -203,5 +219,7 @@ export class ClientService {
 
             await this.channelService.executeTasks(remainedExecutionTasks);
         }
+
+        return intervalId;
     }
 }

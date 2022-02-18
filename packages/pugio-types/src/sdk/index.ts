@@ -28,6 +28,25 @@ export interface SDKResponseBaseUnit {
     updatedAt?: string;
 }
 
+export interface GetClientInfoResponse extends SDKResponseBaseUnit {
+    id: string;
+    name: string;
+    verified: boolean;
+}
+
+export interface GetUserProfileResponse extends SDKResponseBaseUnit {
+    id: string;
+    openId: string;
+    email: string;
+    picture?: string;
+    fullName?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    active: boolean;
+    verified: boolean;
+}
+
 export interface MakeChallengeRequest {
     version?: string;
     deviceId: string;
@@ -74,4 +93,20 @@ export interface PushClientResponseRequest {
     scope: string;
     requestId: string;
     data: any;
+}
+
+export interface PushClientResponseResponse {
+    accepted: boolean;
+}
+
+export interface ReportClientStatusRequest {
+    plaintext: string;
+    cipher: string;
+}
+
+export interface ReportClientStatusResponse extends SDKResponseBaseUnit {
+    id: string;
+    status: number;
+    client: GetClientInfoResponse;
+    reporter: GetUserProfileResponse;
 }

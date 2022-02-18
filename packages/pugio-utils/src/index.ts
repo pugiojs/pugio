@@ -24,10 +24,18 @@ export class UtilsService {
     };
 
     public decryptTaskAesKey(encryptedAesKey: string, privateKey: string) {
-        const rsaKeyPair = new NodeRSA({
-            b: 1024,
-        }).importKey(privateKey, 'pkcs8-private-pem');
-        const decryptedAesKey = rsaKeyPair.decrypt(encryptedAesKey, 'base64');
+        return this.decryptContentWithRSAPrivateKey(encryptedAesKey, privateKey);
+    }
+
+    public encryptContentWithRSAPublicKey(content = '', publicKey: string) {
+        const rsaKeyPair = new NodeRSA({ b: 1024 }).importKey(publicKey, 'pkcs8-public-pem');
+        const encryptedContent = rsaKeyPair.encrypt(Buffer.from(content), 'base64');
+        return encryptedContent;
+    }
+
+    public decryptContentWithRSAPrivateKey(encryptedContent: string, privateKey: string) {
+        const rsaKeyPair = new NodeRSA({ b: 1024 }).importKey(privateKey, 'pkcs8-private-pem');
+        const decryptedAesKey = rsaKeyPair.decrypt(encryptedContent, 'base64');
         return Buffer.from(decryptedAesKey, 'base64').toString();
     }
 

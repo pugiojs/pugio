@@ -26,18 +26,20 @@ export class ConnectionService extends AbstractConnection implements AbstractCon
             [
                 'pollTimerGap',
                 'onClientReady',
+                'onClientDown',
                 'onError',
             ],
         );
 
         const {
             pollTimerGap = 1000,
-            onClientReady: redisClientReadyHandler = _.noop,
-            onError: redisErrorHandler = _.noop,
             hostname = 'pugio.lenconda.top',
             port = 6379,
             username = '',
             password = '',
+            onClientReady: redisClientReadyHandler = _.noop,
+            onClientDown: redisClientDownHandler = _.noop,
+            onError: redisErrorHandler = _.noop,
         } = this.options;
 
         const url = `redis://${username}${password ? `:${password}` : ''}@${hostname}:${port}`;
@@ -49,6 +51,7 @@ export class ConnectionService extends AbstractConnection implements AbstractCon
                     try {
                         await this.client.disconnect();
                         await this.client.quit();
+                        await redisClientDownHandler();
                     } catch (e) {} finally {
                         this.client = null;
                     }

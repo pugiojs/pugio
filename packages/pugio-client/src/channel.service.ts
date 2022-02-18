@@ -74,10 +74,7 @@ export class ChannelService {
 
         if (_.isFunction(pipeFn)) {
             const result = (await pipeFn(data.options)) || {};
-            // this.redisClient.PUBLISH(
-            //     `${this.clientId}@${scope}$${data.id}`,
-            //     _.isString(result) ? result : JSON.stringify(result),
-            // );
+
             await this.sdkService.pushClientResponse({
                 requestId: data.id,
                 scope,
