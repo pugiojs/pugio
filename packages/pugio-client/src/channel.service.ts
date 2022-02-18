@@ -25,7 +25,7 @@ export class ChannelService {
         private readonly executionService: ExecutionService,
     ) {
         this.channelsMap.set('execution', this.handleExecution);
-        this.channelsMap.set('file', (content) => this.pipeChannelRequest('file', content, this.handleFile));
+        this.channelsMap.set('file', (content) => this.pipeChannelRequest('file', content, this.handleFileChannelRequest));
     }
 
     public initialize({ messageHandler, clientId }: ChannelOptions) {
@@ -72,14 +72,36 @@ export class ChannelService {
             data = {};
         }
 
+        this.messageHandler({
+            level: 'info',
+            data: `Request scope: ${scope}, id: ${data.id}, content: ${content}`,
+        });
+
         if (_.isFunction(pipeFn)) {
-            const result = (await pipeFn(data.options)) || {};
+            let errored = false;
+            let result;
+
+            try {
+                result = (await pipeFn(data.options)) || null;
+                this.messageHandler({
+                    level: 'info',
+                    data: `Response scope: ${scope}, id: ${data.id}, result: ${JSON.stringify(result)}`,
+                });
+            } catch (e) {
+                errored = true;
+                result = null;
+                this.messageHandler({
+                    level: 'error',
+                    data: `Response scope: ${scope}, id: ${data.id}, error: ${e.message || e.toString()}`,
+                });
+            }
 
             await this.sdkService.pushChannelResponse({
                 requestId: data.id,
                 scope,
                 clientId: this.clientId,
                 data: result,
+                errored,
             });
         }
     }
@@ -104,14 +126,14 @@ export class ChannelService {
         }
     }
 
-    private async handleFile(data: FileHookRequestOptions) {
+    private async handleFileChannelRequest(data: FileHookRequestOptions) {
         const pathname = data.pathname;
         if (
             !_.isString(pathname) ||
             !fs.existsSync(pathname) ||
             !fs.statSync(pathname).isDirectory()
         ) {
-            return '';
+            return null;
         }
 
         try {
@@ -135,6 +157,7 @@ export class ChannelService {
 
             return items;
         } catch (e) {
+            console.log(e);
             return [];
         }
     }

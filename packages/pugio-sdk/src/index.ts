@@ -137,6 +137,7 @@ export class SDKService {
             scope,
             requestId,
             data,
+            errored,
         } = options;
 
         return await this.requestService
@@ -144,7 +145,10 @@ export class SDKService {
             .request({
                 method: 'post',
                 url: `/client/${clientId}/response/${scope}/${requestId}`,
-                data,
+                data: {
+                    data,
+                    errored,
+                },
             });
     }
 

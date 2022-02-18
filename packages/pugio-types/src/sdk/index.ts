@@ -92,7 +92,8 @@ export interface PushChannelResponseRequest {
     clientId: string;
     scope: string;
     requestId: string;
-    data: any;
+    data?: any;
+    errored?: boolean;
 }
 
 export interface PushChannelResponseResponse {
