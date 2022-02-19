@@ -133,8 +133,6 @@ export class SDKService {
 
     public async pushChannelResponse(options: PushChannelResponseRequest): SDKResponse<PushChannelResponseResponse> {
         const {
-            clientId,
-            scope,
             requestId,
             data,
             errored,
@@ -144,7 +142,7 @@ export class SDKService {
             .getInstance()
             .request({
                 method: 'post',
-                url: `/client/${clientId}/response/${scope}/${requestId}`,
+                url: `/client/channel_response/${requestId}`,
                 data: {
                     data,
                     errored,

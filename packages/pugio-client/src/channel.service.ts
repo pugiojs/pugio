@@ -2,20 +2,22 @@ import { ExecutionService } from '@pugio/execution';
 import { SDKService } from '@pugio/sdk';
 import {
     ChannelOptions,
+    ChannelRequest,
     ClientMessageHandler,
     ExecutionTask,
-    FileHookRequestOptions,
     RedisClient,
+    Type,
 } from '@pugio/types';
 import 'reflect-metadata';
 import { Service } from 'typedi';
 import * as _ from 'lodash';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { channelRequests } from '@pugio/builtins';
+import * as yup from 'yup';
 
 @Service()
 export class ChannelService {
     private channelsMap = new Map();
+    private channelRequestsMap = new Map<string, Function>();
     private redisClient: RedisClient;
     private clientId: string;
     private messageHandler: ClientMessageHandler;
@@ -25,26 +27,62 @@ export class ChannelService {
         private readonly executionService: ExecutionService,
     ) {
         this.channelsMap.set('execution', this.handleExecution);
-        this.channelsMap.set('file', (content) => this.pipeChannelRequest('file', content, this.handleFileChannelRequest));
+        this.channelsMap.set('channel_request', (data) => {
+            this.messageHandler({
+                level: 'info',
+                data: `Channel request receive ${JSON.stringify(data)}`,
+            });
+            this.pipeChannelRequest(data);
+        });
     }
 
-    public initialize({ messageHandler, clientId }: ChannelOptions) {
+    public initialize(
+        {
+            clientId,
+            channelRequestHandlers = [],
+            messageHandler,
+        }: ChannelOptions<Type<channelRequests.AbstractChannelRequest>>,
+    ) {
         this.clientId = clientId;
         this.messageHandler = messageHandler;
+
+        for (const ChannelRequestHandler of channelRequestHandlers) {
+            try {
+                const channelRequestHandler = new ChannelRequestHandler();
+
+                const {
+                    scope,
+                    handleRequest,
+                } = channelRequestHandler;
+
+                this.channelRequestsMap.set(scope, handleRequest);
+
+                this.messageHandler({
+                    level: 'info',
+                    data: `Initialize channel request handler ${scope}`,
+                });
+            } catch (e) {
+                this.messageHandler({
+                    level: 'error',
+                    data: `Error during initialize channel request handler ${e.message || e.toString()}`,
+                });
+            }
+        }
     }
 
     public setRedisClient(redisClient: RedisClient) {
         this.redisClient = redisClient;
     }
 
-    public async subscribeChannel(channelId: string) {
-        const [, channelScope] = channelId.split('@');
-        const handler = this.channelsMap.get(channelScope);
+    public subscribeChannel(channelId: string) {
+        const handler = this.channelsMap.get(channelId);
+
         if (_.isFunction(handler)) {
-            this.redisClient.subscribe(channelId, handler);
+            const redisChannelId = `${this.clientId}@${channelId}`;
+            this.redisClient.subscribe(redisChannelId, handler);
             this.messageHandler({
                 level: 'info',
-                data: `Subscribe to channel ${channelId}`,
+                data: `Subscribe to channel ${redisChannelId}`,
             });
         }
     }
@@ -60,46 +98,62 @@ export class ChannelService {
         }
     }
 
-    public async pipeChannelRequest(scope: string, content: string, pipeFn: (options) => Promise<any>) {
-        let data;
+    public async pipeChannelRequest(data: string) {
+        let channelData: Partial<ChannelRequest<any>>;
+        let errored = false;
+        let result;
 
         try {
-            if (_.isString(data)) {
-                return data;
+            if (!_.isString(data)) {
+                channelData = data;
             }
-            data = JSON.parse(content);
+            channelData = JSON.parse(data);
         } catch (e) {
-            data = {};
+            channelData = {};
         }
+
+        const schema = yup.object().shape({
+            id: yup.string().required(),
+            scope: yup.string().required(),
+            options: yup.string().optional().nullable(),
+        });
+
+        if (!(await schema.isValid(channelData))) {
+            errored = true;
+            result = null;
+        }
+
+        const {
+            scope,
+            id: requestId,
+            options = {},
+        } = channelData;
 
         this.messageHandler({
             level: 'info',
-            data: `Request scope: ${scope}, id: ${data.id}, content: ${content}`,
+            data: `Request scope: ${scope}, id: ${requestId}, content: ${data}`,
         });
 
-        if (_.isFunction(pipeFn)) {
-            let errored = false;
-            let result;
+        const pipeFn = this.channelRequestsMap.get(scope);
 
+        if (_.isFunction(pipeFn)) {
             try {
-                result = (await pipeFn(data.options)) || null;
+                result = (await pipeFn(options)) || null;
                 this.messageHandler({
                     level: 'info',
-                    data: `Response scope: ${scope}, id: ${data.id}, result: ${JSON.stringify(result)}`,
+                    data: `Response scope: ${scope}, id: ${requestId}, result: ${JSON.stringify(result)}`,
                 });
             } catch (e) {
                 errored = true;
                 result = null;
                 this.messageHandler({
                     level: 'error',
-                    data: `Response scope: ${scope}, id: ${data.id}, error: ${e.message || e.toString()}`,
+                    data: `Response scope: ${scope}, id: ${requestId}, error: ${e.message || e.toString()}`,
                 });
             }
 
             await this.sdkService.pushChannelResponse({
-                requestId: data.id,
-                scope,
-                clientId: this.clientId,
+                requestId,
                 data: result,
                 errored,
             });
@@ -123,42 +177,6 @@ export class ChannelService {
             });
 
             await this.executeTasks(executionTasks);
-        }
-    }
-
-    private async handleFileChannelRequest(data: FileHookRequestOptions) {
-        const pathname = data.pathname;
-        if (
-            !_.isString(pathname) ||
-            !fs.existsSync(pathname) ||
-            !fs.statSync(pathname).isDirectory()
-        ) {
-            return null;
-        }
-
-        try {
-            const dirItems = fs.readdirSync(pathname, {
-                withFileTypes: true,
-                encoding: 'utf-8',
-            });
-
-            const items = dirItems.map((dirItem) => {
-                const stat = fs.statSync(path.resolve());
-                return {
-                    ...stat,
-                    name: dirItem.name,
-                    isFIFO: stat.isFIFO(),
-                    isFile: stat.isFile(),
-                    isDirectory: stat.isDirectory(),
-                    isSocket: stat.isSocket(),
-                    isSymbolicLink: stat.isSymbolicLink(),
-                };
-            });
-
-            return items;
-        } catch (e) {
-            console.log(e);
-            return [];
         }
     }
 }

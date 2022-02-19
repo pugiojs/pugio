@@ -1,14 +1,18 @@
 {
-    "name": "@pugio/client",
+    "name": "@pugio/builtins",
     "version": "1.0.0",
-    "description": "Pugio client API",
+    "description": "Pugio built-ins",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
     "license": "MIT",
+    "bin": {
+        "pugio": "bin/cli.js"
+    },
     "main": "lib/index.js",
     "files": [
         "bin",
         "lib",
+        "static",
         "package.json",
         "README.md",
         "LICENSE"
@@ -24,19 +28,12 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/builtins": "^1.0.0",
-        "@pugio/connection": "^1.0.0",
-        "@pugio/execution": "^1.0.0",
         "@pugio/sdk": "^1.0.0",
         "@pugio/types": "^1.0.0",
-        "@pugio/utils": "^1.0.0",
         "fs-extra": "^10.0.0",
         "lodash": "^4.17.21",
-        "node-machine-id": "^1.1.12",
-        "redis": "^4.0.1",
         "reflect-metadata": "^0.1.13",
-        "typedi": "0.8.0",
-        "yup": "^0.32.11"
+        "typedi": "^0.10.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",

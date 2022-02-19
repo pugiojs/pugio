@@ -17,6 +17,11 @@ import { ExecutionService } from '@pugio/execution';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ChannelService } from './channel.service';
+import { channelRequests } from '@pugio/builtins';
+
+const {
+    FileChannelRequest,
+} = channelRequests;
 
 @Service()
 export class ClientService {
@@ -85,11 +90,6 @@ export class ClientService {
             this.messageHandler = messageHandler;
         }
 
-        this.channelService.initialize({
-            clientId: this.clientId,
-            messageHandler: this.messageHandler,
-        });
-
         this.clientKey = this.utilsService.generateClientKey(this.apiKey, this.clientId);
 
         this.sdkService.initialize({
@@ -128,7 +128,6 @@ export class ClientService {
 
         const {
             credential,
-            channels = [],
         } = response;
 
         this.connectionService.initialize({
@@ -136,10 +135,18 @@ export class ClientService {
             username: this.clientId,
             password: credential,
             onClientReady: async (client) => {
+                this.channelService.initialize({
+                    clientId: this.clientId,
+                    channelRequestHandlers: [
+                        FileChannelRequest,
+                    ],
+                    messageHandler: this.messageHandler,
+                });
+
                 if (client.isOpen) {
                     this.redisClient = client;
                     await this.sdkService.connected({ credential });
-                    intervalId = await this.handleClientReady(channels);
+                    intervalId = await this.handleClientReady();
                 }
             },
             onClientDown: () => {
@@ -160,7 +167,12 @@ export class ClientService {
         this.connectionService.connect();
     }
 
-    private async handleClientReady(channels: string[]) {
+    private async handleClientReady() {
+        const channels = [
+            'execution',
+            'channel_request',
+        ];
+
         const intervalId = setInterval(() => {
             const plaintext = Math.random().toString(32).slice(2);
             this.sdkService.reportClientStatus({
@@ -201,8 +213,8 @@ export class ClientService {
             },
         });
 
-        channels.forEach((channelName) => {
-            this.channelService.subscribeChannel(channelName);
+        channels.forEach((channelId) => {
+            this.channelService.subscribeChannel(channelId);
         });
 
         const {

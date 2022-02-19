@@ -54,7 +54,6 @@ export interface MakeChallengeRequest {
 
 export interface MakeChallengeResponse extends ConnectedResponse, SDKResponseBaseUnit {
     credential: string;
-    channels: string[];
 }
 
 export interface ConnectedRequest {
@@ -89,8 +88,6 @@ export interface PushExecutionRecordResponse extends SDKResponseBaseUnit {
 }
 
 export interface PushChannelResponseRequest {
-    clientId: string;
-    scope: string;
     requestId: string;
     data?: any;
     errored?: boolean;

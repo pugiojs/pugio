@@ -23,8 +23,9 @@ export interface ClientOptions {
     onMessage?: ClientMessageHandler;
 }
 
-export interface ChannelOptions {
+export interface ChannelOptions<H> {
     clientId: string;
+    channelRequestHandlers?: H[];
     messageHandler: ClientMessageHandler;
 }
 
