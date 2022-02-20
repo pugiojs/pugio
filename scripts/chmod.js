@@ -22,7 +22,9 @@ const symlink = () => {
         for (const binName of Object.keys(bin)) {
             const targetPathname = path.resolve(packagePath, bin[binName]);
             console.log('[CHMOD]', targetPathname);
-            fs.chmodSync(targetPathname, 777);
+            if (fs.existsSync(targetPathname)) {
+                fs.chmodSync(targetPathname, 777);
+            }
         }
     }
 };

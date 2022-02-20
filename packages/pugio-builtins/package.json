@@ -5,12 +5,8 @@
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
     "license": "MIT",
-    "bin": {
-        "pugio": "bin/cli.js"
-    },
     "main": "lib/index.js",
     "files": [
-        "bin",
         "lib",
         "static",
         "package.json",
