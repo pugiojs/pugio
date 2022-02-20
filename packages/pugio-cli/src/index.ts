@@ -10,12 +10,14 @@ import { ClientCommand } from './client/client.command';
 import { KeygenCommand } from './keygen/keygen.command';
 import { ConfigCommand } from './config/config.command';
 import { DeviceCommand } from './device/device.command';
+import { ChannelCommand } from './channel/channel.command';
 
 const commands = [
     ClientCommand,
     KeygenCommand,
     ConfigCommand,
     DeviceCommand,
+    ChannelCommand,
 ];
 
 initialize();

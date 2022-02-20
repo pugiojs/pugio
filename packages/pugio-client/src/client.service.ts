@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+    ChannelRequestHandlerConfigItem,
     ClientMessageHandler,
     ClientOptions,
     MakeChallengeResponse,
@@ -34,6 +35,7 @@ export class ClientService {
     protected redisOptions: RedisClientOptions;
     protected options: ClientOptions = {};
     protected machineId: string;
+    protected channelList: ChannelRequestHandlerConfigItem[];
     private messageHandler: ClientMessageHandler = _.noop;
 
     public constructor(
@@ -56,6 +58,7 @@ export class ClientService {
             hostname = 'pugio.lenconda.top',
             apiVersion = 1,
             redisOptions = {},
+            channelList = [],
             onMessage: messageHandler,
         } = this.options;
 
@@ -85,6 +88,7 @@ export class ClientService {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
         this.redisOptions = redisOptions;
+        this.channelList = channelList;
 
         if (_.isFunction(messageHandler)) {
             this.messageHandler = messageHandler;
@@ -139,6 +143,18 @@ export class ClientService {
                     clientId: this.clientId,
                     channelRequestHandlers: [
                         FileChannelRequest,
+                        ...(
+                            this.channelList.map((channelItem) => {
+                                const { filename } = channelItem;
+
+                                try {
+                                    const channelHandlerClass = require(filename);
+                                    return channelHandlerClass;
+                                } catch (e) {
+                                    return null;
+                                }
+                            }).filter((item) => !_.isNull(item))
+                        ),
                     ],
                     messageHandler: this.messageHandler,
                 });

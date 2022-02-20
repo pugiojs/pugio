@@ -8,6 +8,7 @@ import {
     CaseStyleType,
     KeepAliveCallbackFunction,
     KeepAliveExitHandler,
+    ChannelRequestHandlerConfigItem,
 } from '@pugio/types';
 import cluster from 'cluster';
 import * as child_process from 'child_process';
@@ -195,5 +196,49 @@ export class UtilsService {
             result[key] = value;
         }
         return result;
+    }
+
+    public parseChannelList(content = '') {
+        if (!content || !_.isString(content) || !content.trim()) {
+            return [];
+        }
+
+        return content.trim().split('\n').map((line) => {
+            const [name, filename] = line.split(/\s+/);
+            return {
+                name,
+                filename,
+            };
+        });
+    }
+
+    public stringifyChannelList(list: ChannelRequestHandlerConfigItem[]) {
+        if (!_.isArray(list)) {
+            return '';
+        }
+
+        return list.map((listItem) => `${listItem.name} ${listItem.filename}`).join('\n');
+    }
+
+    public addChannelHandler(
+        list: ChannelRequestHandlerConfigItem[],
+        name: string,
+        filename: string,
+    ) {
+        const newList = Array.from(list);
+
+        const existedListItemIndex = list.findIndex((listItem) => listItem.name === name);
+
+        if (existedListItemIndex === -1) {
+            newList.push({ name, filename });
+        } else {
+            newList.splice(existedListItemIndex, 1, { name, filename });
+        }
+
+        return newList;
+    }
+
+    public removeChannelHandler(list: ChannelRequestHandlerConfigItem[], name: string) {
+        return list.filter((listItem) => listItem.name !== name);
     }
 }

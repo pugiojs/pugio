@@ -1,7 +1,7 @@
 import {
-    RedisClient,
     RedisConnectionOptions,
 } from '../redis';
+import { ChannelRequestHandlerConfigItem } from '../utils';
 
 export type ClientMessageLevel = 'info' | 'warn' | 'error';
 
@@ -20,6 +20,7 @@ export interface ClientOptions {
     hostname?: string;
     apiVersion?: number;
     redisOptions?: RedisConnectionOptions;
+    channelList?: ChannelRequestHandlerConfigItem[];
     onMessage?: ClientMessageHandler;
 }
 
