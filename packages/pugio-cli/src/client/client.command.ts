@@ -4,14 +4,16 @@ import * as path from 'path';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
 import { ProcessService } from '../services/process.service';
-import {
-    pidFile,
-    dataDir,
-} from '../defaults';
+import { constants } from '@pugio/builtins';
 import { LoggerService } from '../services/logger.service';
 import { AbstractCommand } from '../command.abstract';
 import * as commander from 'commander';
 import * as _ from 'lodash';
+
+const {
+    pidFile,
+    dataDir,
+} = constants;
 
 @Service()
 export class ClientCommand extends AbstractCommand implements AbstractCommand {

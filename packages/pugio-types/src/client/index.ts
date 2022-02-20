@@ -28,20 +28,3 @@ export interface ChannelOptions<H> {
     channelRequestHandlers?: H[];
     messageHandler: ClientMessageHandler;
 }
-
-export interface LockerOptions {
-    expiration?: number;
-    redisClient?: RedisClient;
-    lockName: string;
-}
-
-export interface HookRequest<T> {
-    id: string;
-    options: T;
-}
-
-export interface FileHookRequestOptions {
-    pathname: string;
-}
-
-export type FileHookRequest = HookRequest<FileHookRequestOptions>;

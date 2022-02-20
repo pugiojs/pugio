@@ -3,8 +3,10 @@ import * as _ from 'lodash';
 import { UtilsService } from '@pugio/utils';
 import { Client } from '@pugio/client';
 import { ConfigService } from '../services/config.service';
-import { maps } from '../defaults';
 import { LoggerService } from '../services/logger.service';
+import { constants } from '@pugio/builtins';
+
+const { maps } = constants;
 
 const utilsService = Container.get<UtilsService>(UtilsService);
 const configService = Container.get<ConfigService>(ConfigService);

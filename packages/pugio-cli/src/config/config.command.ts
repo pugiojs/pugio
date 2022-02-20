@@ -8,10 +8,12 @@ import { AbstractCommand } from '../command.abstract';
 import * as commander from 'commander';
 import * as _ from 'lodash';
 import { ConfigService } from '../services/config.service';
-import {
+import { constants } from '@pugio/builtins';
+
+const {
     dataDir,
     configFile,
-} from '../defaults';
+} = constants;
 
 @Service()
 export class ConfigCommand extends AbstractCommand implements AbstractCommand {

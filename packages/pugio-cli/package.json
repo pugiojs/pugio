@@ -28,6 +28,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
+        "@pugio/builtins": "^1.0.0",
         "@pugio/client": "^1.0.0",
         "@pugio/types": "^1.0.0",
         "@pugio/utils": "^1.0.0",

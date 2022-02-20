@@ -3,15 +3,17 @@ import { CLIConfig } from '@pugio/types';
 import * as _ from 'lodash';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import {
-    dataDir,
-    configFile as defaultConfigFile,
-    pidFile,
-    pathResolveKeyList,
-} from '../defaults';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
 import * as os from 'os';
+import { constants } from '@pugio/builtins';
+
+const {
+    dataDir,
+    configFile: defaultConfigFile,
+    pidFile,
+    pathResolveKeyList,
+} = constants;
 
 abstract class AbstractConfig {
     protected config: CLIConfig = {};

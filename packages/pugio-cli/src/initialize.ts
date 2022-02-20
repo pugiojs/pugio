@@ -1,7 +1,9 @@
 import { ConfigService } from './services/config.service';
 import Container from 'typedi';
 import { UtilsService } from '@pugio/utils';
-import { dataDir } from './defaults';
+import { constants } from '@pugio/builtins';
+
+const { dataDir } = constants;
 
 export const initialize = () => {
     const utilsService = Container.get<UtilsService>(UtilsService);
