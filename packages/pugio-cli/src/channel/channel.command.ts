@@ -38,13 +38,13 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             .command('add')
             .requiredOption('-n, --name <name>', 'Request handler name')
             .requiredOption('-f, --filename <filename>', 'Request handler filename')
-            .action(async () => {
+            .action(async (options) => {
                 const {
                     name,
                     filename,
-                } = command.opts();
+                } = options;
 
-                if (!_.isString(name) || _.isString(filename)) {
+                if (!_.isString(name) || !_.isString(filename)) {
                     this.loggerService.singleLog('Error: invalid options');
                     return;
                 }
