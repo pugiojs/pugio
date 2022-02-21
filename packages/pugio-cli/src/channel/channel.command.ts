@@ -67,8 +67,8 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             .description('Remove a channel request handler')
             .command('remove')
             .requiredOption('-n, --name <name>', 'Request handler name')
-            .action(async () => {
-                const { name } = command.opts();
+            .action(async (options) => {
+                const { name } = options;
 
                 const channelList = this.utilsService.parseChannelList(
                     fs.readFileSync(channelListFilePathname).toString(),
