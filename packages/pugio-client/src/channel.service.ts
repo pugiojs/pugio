@@ -115,12 +115,18 @@ export class ChannelService {
         const schema = yup.object().shape({
             id: yup.string().required(),
             scope: yup.string().required(),
-            options: yup.string().optional().nullable(),
+            options: yup.object().optional().nullable(),
         });
 
         if (!(await schema.isValid(channelData))) {
             errored = true;
             result = null;
+
+            return {
+                requestId: channelData.id,
+                errored,
+                data: result,
+            };
         }
 
         const {
