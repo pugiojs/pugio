@@ -1,0 +1,35 @@
+{
+    "name": "@pugio/segmental-transferer",
+    "version": "1.0.0",
+    "description": "Transfer large files by segments",
+    "author": "lenconda <i@lenconda.top>",
+    "homepage": "https://github.com/pugiojs/pugio#readme",
+    "license": "MIT",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "files": [
+        "lib",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pugiojs/pugio.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1"
+    },
+    "bugs": {
+        "url": "https://github.com/pugiojs/pugio/issues"
+    },
+    "dependencies": {
+        "@pugio/types": "^1.0.0",
+        "js-base64": "^3.7.2",
+        "lodash": "^4.17.21",
+        "yup": "^0.32.11"
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.14.178"
+    }
+}

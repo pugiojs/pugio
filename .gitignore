@@ -12,6 +12,7 @@ temp
 .idea
 test.ts
 lib
+es
 .npmrc
 checksum.txt
 .umi
