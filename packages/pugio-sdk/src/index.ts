@@ -8,6 +8,8 @@ import {
     ConsumeExecutionTaskResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
+    PushChannelGatewayRequest,
+    PushChannelGatewayResponse,
     PushChannelResponseRequest,
     PushChannelResponseResponse,
     PushExecutionRecordRequest,
@@ -157,6 +159,16 @@ export class SDKService {
                 method: 'post',
                 url: '/client_status',
                 data: options,
+            });
+    }
+
+    public async pushChannelGateway<T>(options: PushChannelGatewayRequest<T>): SDKResponse<PushChannelGatewayResponse> {
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'post',
+                url: `/client/channel_gateway/${options.eventId}`,
+                data: options.data,
             });
     }
 }

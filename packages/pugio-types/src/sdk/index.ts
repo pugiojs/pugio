@@ -108,3 +108,12 @@ export interface ReportClientStatusResponse extends SDKResponseBaseUnit {
     client: GetClientInfoResponse;
     reporter: GetUserProfileResponse;
 }
+
+export interface PushChannelGatewayRequest<T> {
+    eventId: string;
+    data: T;
+}
+
+export interface PushChannelGatewayResponse extends SDKResponseBaseUnit {
+    accepted: boolean;
+}

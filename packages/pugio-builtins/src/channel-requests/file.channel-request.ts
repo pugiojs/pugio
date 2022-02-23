@@ -1,16 +1,29 @@
 import { AbstractChannelRequest } from './channel-request.abstract';
 import {
+    FileChannelDownloadRequestData,
+    FileChannelDownloadResponse,
     FileChannelMoveRequestData,
     FileChannelReaddirRequestData,
     FileChannelRequestData,
     FileChannelResponse,
+    FileChannelUploadRequestData,
+    FileChannelUploadResponse,
 } from '@pugio/types';
 import * as _ from 'lodash';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import {
+    Sender,
+    Receiver,
+} from '@pugio/segmental-transferer';
+import {
+    v1 as uuidv1,
+    v5 as uuidv5,
+} from 'uuid';
 
 export class FileChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
-    private fileList;
+    private senderList: Record<string, Sender>;
+    private receiverList: Record<string, Receiver>;
 
     public constructor() {
         super('file');
@@ -75,6 +88,98 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                 } catch (e) {}
 
                 return { done };
+            }
+            case 'upload': {
+                const {
+                    id,
+                    pathname,
+                    chunkCount,
+                    chunkContent,
+                    index,
+                } = data as FileChannelUploadRequestData;
+
+                if (!this.receiverList[id]) {
+                    this.receiverList[id] = new Receiver({
+                        id,
+                        chunkCount,
+                        pathname,
+                        onFinish: (data) => {
+                            try {
+                                const { pathname, content } = data;
+                                fs.writeFileSync(pathname, Buffer.from(content, 'base64'));
+                                this.receiverList[id] = null;
+                            } catch (e) {}
+                        },
+                    });
+                }
+
+                const receiver = this.receiverList[id];
+                const done = receiver.receiveChunk(index, chunkContent);
+
+                return { done } as FileChannelUploadResponse;
+            }
+            case 'download': {
+                const {
+                    pathname,
+                    chunkSize = 1024 * 1024,
+                } = data as FileChannelDownloadRequestData;
+
+                const id = uuidv5(`${pathname}@${new Date().toISOString()}`, uuidv1());
+                const file = fs.readFileSync(pathname);
+
+                const sender = new Sender({
+                    id,
+                    file,
+                    chunkSize,
+                    sender: async (index, chunkCount, chunkContent) => {
+                        try {
+                            await this.sdkService.pushChannelGateway({
+                                eventId: 'file:download:processing',
+                                data: {
+                                    index,
+                                    chunkContent,
+                                    chunkCount,
+                                    fileId: id,
+                                },
+                            });
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    },
+                    onError: async () => {
+                        try {
+                            await this.sdkService.pushChannelGateway({
+                                eventId: 'file:download:errored',
+                                data: {
+                                    fileId: id,
+                                },
+                            });
+                        } catch (e) {}
+                    },
+                    onStatusChange: async (status) => {
+                        const {
+                            total,
+                            succeeded,
+                        } = status;
+
+                        if (total === succeeded) {
+                            try {
+                                await this.sdkService.pushChannelGateway({
+                                    eventId: 'file:download:finished',
+                                    data: {
+                                        fileId: id,
+                                    },
+                                });
+                                this.senderList[id] = null;
+                            } catch (e) {}
+                        }
+                    },
+                });
+
+                sender.send();
+
+                return { id } as FileChannelDownloadResponse;
             }
             default:
                 return null;

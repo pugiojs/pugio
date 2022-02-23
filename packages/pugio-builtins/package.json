@@ -25,14 +25,17 @@
     },
     "dependencies": {
         "@pugio/sdk": "^1.0.0",
+        "@pugio/segmental-transferer": "^1.0.0",
         "@pugio/types": "^1.0.0",
         "fs-extra": "^10.0.0",
         "lodash": "^4.17.21",
         "reflect-metadata": "^0.1.13",
-        "typedi": "^0.10.0"
+        "typedi": "^0.10.0",
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
-        "@types/lodash": "^4.14.178"
+        "@types/lodash": "^4.14.178",
+        "@types/uuid": "^8.3.4"
     }
 }

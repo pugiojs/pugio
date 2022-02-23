@@ -9,8 +9,11 @@ export interface FileChannelRequestBaseData {
 }
 
 export interface FileChannelUploadRequestData extends FileChannelRequestBaseData {
+    id: string;
+    pathname: string;
+    index: number;
     chunkCount: number;
-    chunkData: string;
+    chunkContent: string;
 }
 export interface FileChannelReaddirRequestData extends FileChannelRequestBaseData {
     pathname: string;
@@ -20,7 +23,9 @@ export interface FileChannelMoveRequestData extends FileChannelRequestBaseData {
     destination: string;
 }
 export type FileChannelDeleteRequestData = FileChannelReaddirRequestData;
-export type FileChannelDownloadRequestData = FileChannelReaddirRequestData;
+export interface FileChannelDownloadRequestData extends FileChannelReaddirRequestData {
+    chunkSize?: number;
+};
 
 export type FileChannelRequestData = FileChannelUploadRequestData
     | FileChannelReaddirRequestData
@@ -37,8 +42,7 @@ export interface FileChannelUploadResponse {
 export type FileChannelMoveResponse = FileChannelUploadResponse;
 export type FileChannelDeleteResponse = FileChannelUploadResponse;
 export interface FileChannelDownloadResponse {
-    chunkCount: number;
-    chunkData: string;
+    id: string;
 }
 
 export type FileChannelResponse = FileChannelUploadResponse

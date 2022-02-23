@@ -35,6 +35,7 @@ export class Sender {
             maximumRetryTimes: 10,
             sender: undefined,
             onStatusChange: _.noop,
+            onError: _.noop,
         };
 
         this.options = _.merge(defaultOptions, options);
@@ -87,6 +88,7 @@ export class Sender {
                 await send(retryTimes + 1);
             } else {
                 this.status[index] = false;
+                await this.options.onError();
             }
         };
 
