@@ -73,8 +73,10 @@ const build = (watch = false, selectedPackages = []) => {
         }
 
         const execute = watch ? spawn : spawnSync;
+        const command = watch ? 'tsc' : 'npm';
+        const args = watch ? ['--watch'] : ['run', 'build'];
 
-        execute('tsc', (watch ? ['--watch'] : []), {
+        execute(command, args, {
             cwd: pathname,
             stdio: 'inherit',
         });

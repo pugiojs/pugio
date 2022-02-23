@@ -13,6 +13,9 @@ temp
 test.ts
 lib
 es
+umd
+amd
+cjs
 .npmrc
 checksum.txt
 .umi
