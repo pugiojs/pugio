@@ -55,7 +55,7 @@ export class ChannelService {
                     handleRequest,
                 } = channelRequestHandler;
 
-                this.channelRequestsMap.set(scope, handleRequest);
+                this.channelRequestsMap.set(scope, handleRequest.bind(channelRequestHandler));
 
                 this.messageHandler({
                     level: 'info',
@@ -153,7 +153,7 @@ export class ChannelService {
                 errored = true;
                 result = null;
                 this.messageHandler({
-                    level: 'error',
+                    level: 'info',
                     data: `Response scope: ${scope}, id: ${requestId}, error: ${e.message || e.toString()}`,
                 });
             }

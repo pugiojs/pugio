@@ -22,8 +22,8 @@ import {
 } from 'uuid';
 
 export class FileChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
-    private senderList: Record<string, Sender>;
-    private receiverList: Record<string, Receiver>;
+    private senderList: Record<string, Sender> = {};
+    private receiverList: Record<string, Receiver> = {};
 
     public constructor() {
         super('file');

@@ -41,7 +41,7 @@ export class Receiver {
 
     public receiveChunk(index: number, chunkContent: string) {
         if (!this.chunks[index]) {
-            this.chunks[index] = chunkContent;
+            this.chunks.splice(index, 1, chunkContent);
         } else {
             return true;
         }
@@ -69,15 +69,6 @@ export class Receiver {
     }
 
     private getFileBase64Content() {
-        let content: string;
-        const remainedChunks = this.chunks.filter((chunk) => !_.isString(chunk));
-
-        if (remainedChunks.length > 0) {
-            content = '';
-        }
-
-        content = this.chunks.join('');
-
-        return content;
+        return this.chunks.join('');
     }
 }
