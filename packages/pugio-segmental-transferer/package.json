@@ -29,9 +29,7 @@
     },
     "dependencies": {
         "@pugio/types": "^1.0.1",
-        "js-base64": "^3.7.2",
-        "lodash": "^4.17.21",
-        "yup": "^0.32.11"
+        "lodash": "^4.17.21"
     },
     "devDependencies": {
         "@babel/core": "^7.9.6",

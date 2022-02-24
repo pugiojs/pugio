@@ -1,6 +1,5 @@
 import { SenderOptions } from '@pugio/types';
 import * as _ from 'lodash';
-import { Base64 } from 'js-base64';
 
 export class Sender {
     public static async readBrowserFileAsUint8Array(file: File): Promise<Uint8Array> {
@@ -55,7 +54,7 @@ export class Sender {
             throw new Error('Invalid sender options');
         }
 
-        this.chunkCount = Math.ceil(file.byteLength / chunkSize) + 1;
+        this.chunkCount = Math.ceil((file.byteLength * 1.334) / chunkSize);
         this.status = new Array(this.chunkCount).fill(null);
     }
 
