@@ -1,6 +1,6 @@
 {
     "name": "@pugio/cli",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Pugio CLI",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -29,10 +29,10 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/builtins": "^1.0.0",
-        "@pugio/client": "^1.0.0",
-        "@pugio/types": "^1.0.0",
-        "@pugio/utils": "^1.0.0",
+        "@pugio/builtins": "^1.0.1",
+        "@pugio/client": "^1.0.1",
+        "@pugio/types": "^1.0.1",
+        "@pugio/utils": "^1.0.1",
         "cli-table3": "^0.6.1",
         "commander": "^9.0.0",
         "find-process": "^1.4.7",

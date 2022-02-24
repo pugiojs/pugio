@@ -1,6 +1,6 @@
 {
     "name": "@pugio/connection",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Pugio Connection",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -25,7 +25,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^1.0.0",
+        "@pugio/types": "^1.0.1",
         "redis": "^4.0.3",
         "reflect-metadata": "^0.1.13",
         "typedi": "0.8.0"

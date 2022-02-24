@@ -1,6 +1,6 @@
 {
     "name": "@pugio/segmental-transferer",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Transfer large files by segments",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -8,6 +8,7 @@
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "files": [
+        "umd",
         "lib",
         "package.json",
         "README.md",
@@ -27,7 +28,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^1.0.0",
+        "@pugio/types": "^1.0.1",
         "js-base64": "^3.7.2",
         "lodash": "^4.17.21",
         "yup": "^0.32.11"
