@@ -12,7 +12,8 @@
         "symlink-packages": "node scripts/symlink-packages.js",
         "clean": "node scripts/clean.js",
         "chmod": "node scripts/chmod.js",
-        "postinstall": "npm run chmod"
+        "postinstall": "npm run chmod",
+        "version": "lerna version --no-git-tag-version"
     },
     "devDependencies": {
         "@types/jest": "^26.0.23",
