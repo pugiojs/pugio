@@ -23,8 +23,8 @@ import {
 import * as mimeTypes from 'mime-types';
 
 export class FileChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
-    private senderList: Record<string, Sender> = {};
-    private receiverList: Record<string, Receiver> = {};
+    private senderList = new Map<string, Sender>();
+    private receiverList = new Map<string, Receiver>();
 
     public constructor() {
         super('file');
@@ -99,8 +99,8 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     index,
                 } = data as FileChannelUploadRequestData;
 
-                if (!this.receiverList[id]) {
-                    this.receiverList[id] = new Receiver({
+                if (!this.receiverList.get(id)) {
+                    this.receiverList.set(id, new Receiver({
                         id,
                         chunkCount,
                         pathname,
@@ -108,13 +108,13 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                             try {
                                 const { pathname, content } = data;
                                 fs.writeFileSync(pathname, Buffer.from(content.buffer));
-                                this.receiverList[id] = null;
+                                this.receiverList.delete(id);
                             } catch (e) {}
                         },
-                    });
+                    }));
                 }
 
-                const receiver = this.receiverList[id];
+                const receiver = this.receiverList.get(id);
                 const done = receiver.receiveChunk(index, chunkContent);
 
                 return { done } as FileChannelUploadResponse;
@@ -130,7 +130,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                 const filename = path.basename(pathname);
                 const mimeType = mimeTypes.lookup(path.extname(filename));
 
-                const sender = new Sender({
+                this.senderList.set(id, new Sender({
                     id,
                     file,
                     chunkSize,
@@ -176,12 +176,13 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                                         fileId: id,
                                     },
                                 });
-                                this.senderList[id] = null;
+                                this.senderList.delete(null);
                             } catch (e) {}
                         }
                     },
-                });
+                }));
 
+                const sender = this.senderList.get(id);
                 sender.send();
 
                 return { id } as FileChannelDownloadResponse;
