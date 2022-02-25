@@ -106,7 +106,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                         onFinish: (data) => {
                             try {
                                 const { pathname, content } = data;
-                                fs.writeFileSync(pathname, Buffer.from(content, 'base64'));
+                                fs.writeFileSync(pathname, Buffer.from(content.buffer));
                                 this.receiverList[id] = null;
                             } catch (e) {}
                         },

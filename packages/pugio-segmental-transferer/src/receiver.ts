@@ -3,6 +3,7 @@ import {
     ReceiverOptions,
 } from '@pugio/types';
 import * as _ from 'lodash';
+import { Base64 } from 'js-base64';
 
 export class Receiver {
     protected options: ReceiverOptions;
@@ -51,7 +52,7 @@ export class Receiver {
         });
 
         if (receivedChunks.length === this.options.chunkCount) {
-            const content = this.getFileBase64Content();
+            const content = this.getFileUint8Array();
             this.handleFinish({
                 content,
                 pathname: this.options.pathname,
@@ -68,7 +69,14 @@ export class Receiver {
         return true;
     }
 
-    private getFileBase64Content() {
-        return this.chunks.join('');
+    private getFileUint8Array(): Uint8Array {
+        return this.chunks.reduce<Uint8Array>((previous, current) => {
+            const currentBinaryString = Base64.decode(current);
+            const currentUint8Array = new Uint8Array(currentBinaryString.length);
+            for (let i = 0; i < currentBinaryString.length; i += 1) {
+                currentUint8Array[i] = currentBinaryString.charCodeAt(i);
+            }
+            return new Uint8Array([...previous, ...currentUint8Array]);
+        }, new Uint8Array(0));
     }
 }

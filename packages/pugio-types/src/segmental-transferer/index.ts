@@ -17,7 +17,7 @@ export interface SenderOptions {
 
 export interface FinishReceiveData {
     pathname: string;
-    content: string;
+    content: Uint8Array;
 }
 export type FinishReceiveHandler = (data: FinishReceiveData) => void | Promise<void>;
 
