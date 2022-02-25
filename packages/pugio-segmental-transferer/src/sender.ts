@@ -26,6 +26,7 @@ export class Sender {
     public chunkCount: number;
     protected options: SenderOptions;
     protected status: boolean[];
+    private chunkProcessCount = 0;
 
     public constructor(options: SenderOptions) {
         const defaultOptions: SenderOptions = {
@@ -34,6 +35,7 @@ export class Sender {
             chunkSize: 1024 * 10,
             maximumRetryTimes: 10,
             sender: undefined,
+            concurrency: 64,
             onStatusChange: _.noop,
             onError: _.noop,
         };
@@ -71,13 +73,27 @@ export class Sender {
             }, '');
             const chunkContent = Base64.encode(chunkBinaryContent);
 
-            await this.sendChunk(i, chunkContent);
+            if (
+                this.options.concurrency === false ||
+                !_.isNumber(this.options.concurrency) ||
+                this.options.concurrency <= 0
+            ) {
+                await this.sendChunk(i, chunkContent);
+            } else {
+                this.sendChunk(i, chunkContent).finally(() => {
+                    this.chunkProcessCount = this.chunkProcessCount - 1;
+                });
+            }
         }
     }
 
     private async sendChunk(index: number, chunkContent: string) {
         if (!_.isNumber(index) || !_.isString(chunkContent)) {
             return;
+        }
+
+        while (this.chunkProcessCount >= this.options.concurrency) {
+            continue;
         }
 
         const handleRetry = async (retryTimes: number) => {

@@ -10,6 +10,7 @@ export interface SenderOptions {
     file: Uint8Array;
     chunkSize?: number;
     maximumRetryTimes?: number;
+    concurrency?: boolean | number;
     sender: (index: number, chunkCount: number, chunkContent: string) => boolean | Promise<boolean>;
     onStatusChange?: (status: ChunkStatus) => void | Promise<void>;
     onError?: (error: Error) => void | Promise<void>;
