@@ -1,6 +1,6 @@
 {
     "name": "@pugio/builtins",
-    "version": "1.0.2",
+    "version": "1.2.0",
     "description": "Pugio built-ins",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -25,9 +25,9 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/sdk": "^1.0.2",
-        "@pugio/segmental-transferer": "^1.0.2",
-        "@pugio/types": "^1.0.2",
+        "@pugio/sdk": "^1.2.0",
+        "@pugio/segmental-transferer": "^1.2.0",
+        "@pugio/types": "^1.2.0",
         "fs-extra": "^10.0.0",
         "lodash": "^4.17.21",
         "mime-types": "^2.1.34",
