@@ -20,6 +20,7 @@ import {
     v1 as uuidv1,
     v5 as uuidv5,
 } from 'uuid';
+import * as mimeTypes from 'mime-types';
 
 export class FileChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
     private senderList: Record<string, Sender> = {};
@@ -126,6 +127,8 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
 
                 const id = uuidv5(`${pathname}@${new Date().toISOString()}`, uuidv1());
                 const file = fs.readFileSync(pathname);
+                const filename = path.basename(pathname);
+                const mimeType = mimeTypes.lookup(path.extname(filename));
 
                 const sender = new Sender({
                     id,
@@ -140,6 +143,8 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                                     chunkContent,
                                     chunkCount,
                                     fileId: id,
+                                    filename,
+                                    mimeType,
                                 },
                             });
                             return true;
