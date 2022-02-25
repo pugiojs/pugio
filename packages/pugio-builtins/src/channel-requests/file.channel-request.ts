@@ -108,6 +108,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                             try {
                                 const { pathname, content } = data;
                                 fs.writeFileSync(pathname, Buffer.from(content.buffer));
+                                this.receiverList.set(id, null);
                                 this.receiverList.delete(id);
                             } catch (e) {}
                         },
@@ -178,7 +179,9 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                                         fileId: id,
                                     },
                                 });
-                                this.senderList.delete(null);
+
+                                this.senderList.set(id, null);
+                                this.senderList.delete(id);
                             } catch (e) {}
                         }
                     },
