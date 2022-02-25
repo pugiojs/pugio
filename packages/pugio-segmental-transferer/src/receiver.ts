@@ -73,10 +73,16 @@ export class Receiver {
         return this.chunks.reduce<Uint8Array>((previous, current) => {
             const currentBinaryString = Base64.decode(current);
             const currentUint8Array = new Uint8Array(currentBinaryString.length);
+
             for (let i = 0; i < currentBinaryString.length; i += 1) {
                 currentUint8Array[i] = currentBinaryString.charCodeAt(i);
             }
-            return new Uint8Array([...previous, ...currentUint8Array]);
+
+            const newPreviousBuffer = new Uint8Array(previous.byteLength + currentUint8Array.byteLength);
+            newPreviousBuffer.set(previous, 0);
+            newPreviousBuffer.set(currentUint8Array, previous.byteLength);
+
+            return newPreviousBuffer;
         }, new Uint8Array(0));
     }
 }

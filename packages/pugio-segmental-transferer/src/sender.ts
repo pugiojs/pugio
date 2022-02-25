@@ -31,7 +31,7 @@ export class Sender {
         const defaultOptions: SenderOptions = {
             id: undefined,
             file: undefined,
-            chunkSize: 1024 * 50,
+            chunkSize: 1024 * 10,
             maximumRetryTimes: 10,
             sender: undefined,
             onStatusChange: _.noop,
