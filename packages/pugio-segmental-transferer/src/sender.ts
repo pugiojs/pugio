@@ -1,5 +1,6 @@
 import { SenderOptions } from '@pugio/types';
 import * as _ from 'lodash';
+import { Base64 } from 'js-base64';
 
 export class Sender {
     public static async readBrowserFileAsUint8Array(file: File): Promise<Uint8Array> {
@@ -54,35 +55,24 @@ export class Sender {
             throw new Error('Invalid sender options');
         }
 
-        this.chunkCount = Math.ceil((file.byteLength * 1.334) / chunkSize);
+        this.chunkCount = Math.ceil(file.byteLength * 1.334 / chunkSize);
         this.status = new Array(this.chunkCount).fill(null);
     }
 
     public async send() {
-        const fileBinaryContent = this.options.file.reduce((result, byte) => {
-            return result + String.fromCharCode(byte);
-        }, '');
-        const fileContent = this.base64Encode(fileBinaryContent);
         for (let i = 0; i < this.chunkCount; i += 1) {
-            const chunkContent = fileContent.slice(
+            const chunkedFile = this.options.file.slice(
                 this.options.chunkSize * i,
                 this.options.chunkSize * (i + 1),
             );
 
+            const chunkBinaryContent = chunkedFile.reduce((result, byte) => {
+                return result + String.fromCharCode(byte);
+            }, '');
+            const chunkContent = Base64.encode(chunkBinaryContent);
+
             await this.sendChunk(i, chunkContent);
         }
-    }
-
-    private base64Encode(rawString: string, type: any = 'binary'): string {
-        let encoder;
-        if (window && _.isFunction(window.btoa)) {
-            encoder = window.btoa;
-        } else if (_.isFunction(Buffer.from)) {
-            encoder = (data: string) => {
-                return Buffer.from(data, type).toString('base64');
-            };
-        }
-        return encoder(rawString);
     }
 
     private async sendChunk(index: number, chunkContent: string) {
