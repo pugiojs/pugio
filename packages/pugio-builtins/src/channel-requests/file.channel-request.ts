@@ -121,7 +121,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
             case 'download': {
                 const {
                     pathname,
-                    chunkSize = 1024 * 1024,
+                    chunkSize = 1024 * 10,
                 } = data as FileChannelDownloadRequestData;
 
                 const id = uuidv5(`${pathname}@${new Date().toISOString()}`, uuidv1());
