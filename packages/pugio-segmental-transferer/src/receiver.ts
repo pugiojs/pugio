@@ -40,9 +40,9 @@ export class Receiver {
         this.chunks = new Array(chunkCount).fill(null);
     }
 
-    public receiveChunk(index: number, chunkContent: string) {
+    public receiveChunk(index: number, chunkContent = '') {
         if (!this.chunks[index]) {
-            this.chunks.splice(index, 1, chunkContent);
+            this.chunks.splice(index, 1, chunkContent || '');
         } else {
             return true;
         }
@@ -60,7 +60,7 @@ export class Receiver {
         }
 
         this.options.onStatusChange({
-            total: this.chunks.length,
+            total: this.options.chunkCount,
             failed: 0,
             succeeded: this.chunks.filter((chunk) => _.isString(chunk)).length,
             waiting: this.chunks.filter((chunk) => !_.isString(chunk)).length,

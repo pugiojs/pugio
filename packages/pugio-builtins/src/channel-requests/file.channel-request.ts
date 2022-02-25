@@ -95,7 +95,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     id,
                     pathname,
                     chunkCount,
-                    chunkContent,
+                    chunkContent = '',
                     index,
                 } = data as FileChannelUploadRequestData;
 
@@ -143,6 +143,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                                     chunkContent,
                                     chunkCount,
                                     fileId: id,
+                                    pathname,
                                     filename,
                                     mimeType,
                                 },
@@ -152,12 +153,13 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                             return false;
                         }
                     },
-                    onError: async () => {
+                    onError: async (error) => {
                         try {
                             await this.sdkService.pushChannelGateway({
                                 eventId: 'file:download:errored',
                                 data: {
                                     fileId: id,
+                                    error: error.message || error.toString(),
                                 },
                             });
                         } catch (e) {}

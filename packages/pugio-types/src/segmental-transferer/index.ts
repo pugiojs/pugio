@@ -12,7 +12,7 @@ export interface SenderOptions {
     maximumRetryTimes?: number;
     sender: (index: number, chunkCount: number, chunkContent: string) => boolean | Promise<boolean>;
     onStatusChange?: (status: ChunkStatus) => void | Promise<void>;
-    onError?: () => void | Promise<void>;
+    onError?: (error: Error) => void | Promise<void>;
 }
 
 export interface FinishReceiveData {

@@ -47,12 +47,12 @@ export class Sender {
             sender,
         } = this.options;
 
-        if (
-            !id ||
-            !file ||
-            !_.isFunction(sender)
-        ) {
-            throw new Error('Invalid sender options');
+        if (!file) {
+            this.options.onError(new Error('File not found'));
+        }
+
+        if (!id || !_.isFunction(sender)) {
+            this.options.onError(new Error('Invalid sender options'));
         }
 
         this.chunkCount = Math.ceil(file.byteLength * 1.334 / chunkSize);
@@ -85,7 +85,7 @@ export class Sender {
                 await send(retryTimes + 1);
             } else {
                 this.status[index] = false;
-                await this.options.onError();
+                await this.options.onError(new Error('Failed to send chunk ' + index.toString()));
             }
         };
 

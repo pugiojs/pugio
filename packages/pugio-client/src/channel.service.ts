@@ -54,6 +54,7 @@ export class ChannelService {
                     scope,
                     handleRequest,
                 } = channelRequestHandler;
+                channelRequestHandler.setSDKService(this.sdkService);
 
                 this.channelRequestsMap.set(scope, handleRequest.bind(channelRequestHandler));
 
