@@ -63,6 +63,7 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
         }
 
         this.defaultConfig = _.set(this.defaultConfig, pathname, configValue);
+        this.config = _.set(this.config, pathname, configValue);
         this.config = _.merge(this.defaultConfig, this.config);
 
         fs.writeFileSync(
