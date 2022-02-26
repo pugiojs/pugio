@@ -97,6 +97,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     chunkCount,
                     chunkContent = '',
                     index,
+                    md5,
                 } = data as FileChannelUploadRequestData;
 
                 if (!this.receiverList.get(id)) {
@@ -116,7 +117,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                 }
 
                 const receiver = this.receiverList.get(id);
-                const done = receiver.receiveChunk(index, chunkContent);
+                const done = receiver.receiveChunk(index, chunkContent, md5);
 
                 return { done } as FileChannelUploadResponse;
             }
@@ -135,7 +136,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     id,
                     file,
                     chunkSize,
-                    sender: async (index, chunkCount, chunkContent) => {
+                    sender: async ({ index, chunkCount, chunkContent, md5 }) => {
                         try {
                             await this.sdkService.pushChannelGateway({
                                 eventId: 'file:download:processing',
@@ -147,6 +148,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                                     pathname,
                                     filename,
                                     mimeType,
+                                    md5,
                                 },
                             });
                             return true;

@@ -14,6 +14,7 @@ export interface FileChannelUploadRequestData extends FileChannelRequestBaseData
     index: number;
     chunkCount: number;
     chunkContent: string;
+    md5: string;
 }
 export interface FileChannelReaddirRequestData extends FileChannelRequestBaseData {
     pathname: string;

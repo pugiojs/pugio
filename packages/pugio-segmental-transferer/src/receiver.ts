@@ -4,6 +4,7 @@ import {
 } from '@pugio/types';
 import * as _ from 'lodash';
 import { Base64 } from 'js-base64';
+import { ArrayBuffer as SparkArrayBuffer } from 'spark-md5';
 
 export class Receiver {
     protected options: ReceiverOptions;
@@ -40,12 +41,14 @@ export class Receiver {
         this.chunks = new Array(chunkCount).fill(null);
     }
 
-    public receiveChunk(index: number, chunkContent = '') {
+    public receiveChunk(index: number, chunkContent = '', md5 = '') {
         if (!this.chunks[index]) {
             this.chunks.splice(index, 1, chunkContent || '');
         } else {
             return true;
         }
+
+        let errored = false;
 
         const receivedChunks = this.chunks.filter((chunk) => {
             return _.isString(chunk);
@@ -53,20 +56,30 @@ export class Receiver {
 
         if (receivedChunks.length === this.options.chunkCount) {
             const content = this.getFileUint8Array();
-            this.handleFinish({
-                content,
-                pathname: this.options.pathname,
-            });
+            const sparkBuffer = new SparkArrayBuffer();
+            sparkBuffer.append(content);
+            const receivedFileMd5 = sparkBuffer.end();
+
+            if (receivedFileMd5 === md5) {
+                this.handleFinish({
+                    content,
+                    pathname: this.options.pathname,
+                });
+            } else {
+                errored = true;
+            }
         }
 
         this.options.onStatusChange({
             total: this.options.chunkCount,
-            failed: 0,
-            succeeded: this.chunks.filter((chunk) => _.isString(chunk)).length,
+            failed: errored ? 1 : 0,
+            succeeded: errored
+                ? this.chunks.filter((chunk) => _.isString(chunk)).length - 1
+                : this.chunks.filter((chunk) => _.isString(chunk)).length,
             waiting: this.chunks.filter((chunk) => !_.isString(chunk)).length,
         });
 
-        return true;
+        return !errored;
     }
 
     private getFileUint8Array(): Uint8Array {

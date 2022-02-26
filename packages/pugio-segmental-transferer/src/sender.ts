@@ -1,6 +1,7 @@
 import { SenderOptions } from '@pugio/types';
 import * as _ from 'lodash';
 import { Base64 } from 'js-base64';
+import { ArrayBuffer as SparkArrayBuffer } from 'spark-md5';
 
 export class Sender {
     public static async readBrowserFileAsUint8Array(file: File): Promise<Uint8Array> {
@@ -26,6 +27,7 @@ export class Sender {
     public chunkCount: number;
     protected options: SenderOptions;
     protected status: boolean[];
+    protected md5: string;
 
     public constructor(options: SenderOptions) {
         const defaultOptions: SenderOptions = {
@@ -58,6 +60,10 @@ export class Sender {
 
         this.chunkCount = Math.ceil(file.byteLength * 1.334 / chunkSize);
         this.status = new Array(this.chunkCount).fill(null);
+
+        const sparkBuffer = new SparkArrayBuffer();
+        sparkBuffer.append(file);
+        this.md5 = sparkBuffer.end();
     }
 
     public async send() {
@@ -96,12 +102,17 @@ export class Sender {
 
         const send = async (retryTimes = 0) => {
             try {
-                const result = await this.options.sender(index, this.chunkCount, chunkContent);
+                const result = await this.options.sender({
+                    index,
+                    chunkContent,
+                    md5: this.md5,
+                    chunkCount: this.chunkCount,
+                });
 
-                if (_.isBoolean(result) && result) {
-                    this.status[index] = true;
+                if (_.isBoolean(result)) {
+                    this.status[index] = result;
                 } else {
-                    await handleRetry(retryTimes);
+                    this.status[index] = true;
                 }
             } catch (e) {
                 await handleRetry(retryTimes);

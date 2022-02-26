@@ -11,7 +11,12 @@ export interface SenderOptions {
     chunkSize?: number;
     maximumRetryTimes?: number;
     concurrency?: boolean;
-    sender: (index: number, chunkCount: number, chunkContent: string) => boolean | Promise<boolean>;
+    sender: (options: {
+        index: number,
+        chunkCount: number,
+        chunkContent: string,
+        md5: string,
+    }) => boolean | Promise<boolean>;
     onStatusChange?: (status: ChunkStatus) => void | Promise<void>;
     onError?: (error: Error) => void | Promise<void>;
 }
