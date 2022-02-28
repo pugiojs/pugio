@@ -30,7 +30,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
         super('file');
     }
 
-    public handleRequest(data: FileChannelRequestData): FileChannelResponse {
+    public async handleRequest(data: FileChannelRequestData): Promise<FileChannelResponse> {
         const { action } = data;
 
         switch (action) {

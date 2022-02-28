@@ -48,7 +48,7 @@ export interface FileChannelDownloadResponse {
 
 export type FileChannelResponse = FileChannelUploadResponse
     | FileChannelReaddirResponse
-    | FileChannelMoveRequestData
+    | FileChannelMoveResponse
     | FileChannelDeleteResponse
     | FileChannelDownloadResponse;
 
@@ -57,3 +57,34 @@ export interface FileListItem {
     chunkCount: number;
     chunks: string[];
 }
+
+export interface TerminalChannelRequestBaseData {
+    type: string;
+}
+
+export interface TerminalChannelConnectRequestData extends TerminalChannelRequestBaseData {
+    args?: string[];
+    rows?: number;
+    cols?: number;
+    cwd?: string;
+    env?: Record<string, string>;
+}
+
+export interface TerminalChannelDataRequestData extends TerminalChannelRequestBaseData {
+    data?: string;
+}
+
+export type TerminalChannelRequestData = TerminalChannelConnectRequestData
+    | TerminalChannelDataRequestData;
+
+export interface TerminalChannelConnectResponseData {
+    id: string;
+    error?: string;
+}
+
+export interface TerminalChannelDataResponseData {
+    accepted: boolean;
+}
+
+export type TerminalChannelResponseData = TerminalChannelConnectResponseData
+    | TerminalChannelDataResponseData;
