@@ -4,15 +4,15 @@ import {
     TerminalChannelResponseData,
 } from '@pugio/types';
 import * as _ from 'lodash';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import {
     v1 as uuidv1,
     v5 as uuidv5,
 } from 'uuid';
-import * as mimeTypes from 'mime-types';
+import * as pty from 'node-pty';
 
 export class TerminalChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
+    protected connectionMap = new Map<string, pty.IPty>();
+
     public constructor() {
         super('terminal');
     }
@@ -22,6 +22,10 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
         switch (type) {
             case 'connect': {
+                const id = uuidv5(
+                    new Date().toISOString() + Math.random().toString(32),
+                    uuidv1(),
+                );
                 return;
             }
             default:
