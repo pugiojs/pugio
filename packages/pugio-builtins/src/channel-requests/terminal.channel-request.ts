@@ -1,5 +1,7 @@
 import { AbstractChannelRequest } from './channel-request.abstract';
 import {
+    TerminalChannelCloseRequestData,
+    TerminalChannelCloseResponseData,
     TerminalChannelConfig,
     TerminalChannelConnectRequestData,
     TerminalChannelConnectResponseData,
@@ -150,6 +152,38 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     } as TerminalChannelDataResponseData;
                 }
             }
+            case 'close': {
+                try {
+                    const {
+                        id,
+                    } = data as TerminalChannelCloseRequestData;
+
+                    if (!_.isString(id)) {
+                        throw new Error('Parameter \'id\' must be specified');
+                    }
+
+                    let accepted = false;
+
+                    const ptyProcess = this.ptyProcessMap.get(id);
+
+                    if (ptyProcess) {
+                        try {
+                            this.killPty(id);
+                            accepted = true;
+                        } catch (e) {}
+                    }
+
+                    return {
+                        accepted,
+                        error: null,
+                    } as TerminalChannelCloseResponseData;
+                } catch (e) {
+                    return {
+                        accepted: false,
+                        error: e.message || e.toString(),
+                    } as TerminalChannelCloseResponseData;
+                }
+            }
             default:
                 return null;
         }
@@ -161,19 +195,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
         this.ptyKillerMap.set(
             id,
             setTimeout(() => {
-                this.ptyKillerMap.set(id, null);
-                this.ptyKillerMap.delete(id);
-
-                const ptyProcess = this.ptyProcessMap.get(id);
-                if (ptyProcess) {
-                    try {
-                        ptyProcess.kill('SIGHUP');
-                    } catch (e) {}
-                }
-                this.ptyProcessMap.set(id, null);
-                this.ptyProcessMap.delete(id);
-
-                this.ptyStatusMap.set(id, 'destroyed');
+                this.killPty(id);
             }, ptyConfig.dieTimeout),
         );
     }
@@ -184,5 +206,21 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
             clearTimeout(timeoutId);
         } catch (e) {}
         this.setPtyKiller(id);
+    }
+
+    private killPty(id: string) {
+        this.ptyKillerMap.set(id, null);
+        this.ptyKillerMap.delete(id);
+
+        const ptyProcess = this.ptyProcessMap.get(id);
+        if (ptyProcess) {
+            try {
+                ptyProcess.kill('SIGHUP');
+            } catch (e) {}
+        }
+        this.ptyProcessMap.set(id, null);
+        this.ptyProcessMap.delete(id);
+
+        this.ptyStatusMap.set(id, 'destroyed');
     }
 }

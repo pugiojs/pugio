@@ -81,9 +81,14 @@ export interface TerminalChannelDataRequestData extends TerminalChannelRequestBa
     data?: string;
 }
 
+export interface TerminalChannelCloseRequestData extends TerminalChannelRequestBaseData {
+    id: string;
+}
+
 export type TerminalChannelRequestData = TerminalChannelHandshakeRequestData
     | TerminalChannelConnectRequestData
-    | TerminalChannelDataRequestData;
+    | TerminalChannelDataRequestData
+    | TerminalChannelCloseRequestData;
 
 export interface TerminalChannelHandshakeResponseData {
     id: string;
@@ -94,13 +99,12 @@ export interface TerminalChannelConnectResponseData {
     error?: string;
 }
 
-export interface TerminalChannelDataResponseData {
-    accepted: boolean;
-    error?: string;
-}
+export type TerminalChannelDataResponseData = TerminalChannelConnectResponseData;
+export type TerminalChannelCloseResponseData = TerminalChannelConnectResponseData;
 
 export type TerminalChannelResponseData = TerminalChannelHandshakeResponseData
     | TerminalChannelConnectResponseData
-    | TerminalChannelDataResponseData;
+    | TerminalChannelDataResponseData
+    | TerminalChannelCloseResponseData;
 
 export type TerminalStatus = 'running' | 'destroyed' | 'waiting';
