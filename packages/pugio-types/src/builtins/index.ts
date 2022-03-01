@@ -62,7 +62,11 @@ export interface TerminalChannelRequestBaseData {
     type: string;
 }
 
+export type TerminalChannelHandshakeRequestData = TerminalChannelRequestBaseData;
+
 export interface TerminalChannelConnectRequestData extends TerminalChannelRequestBaseData {
+    id: string;
+    dieTimeout?: number;
     args?: string[];
     rows?: number;
     cols?: number;
@@ -71,20 +75,28 @@ export interface TerminalChannelConnectRequestData extends TerminalChannelReques
 }
 
 export interface TerminalChannelDataRequestData extends TerminalChannelRequestBaseData {
+    id: string;
     data?: string;
 }
 
-export type TerminalChannelRequestData = TerminalChannelConnectRequestData
+export type TerminalChannelRequestData = TerminalChannelHandshakeRequestData
+    | TerminalChannelConnectRequestData
     | TerminalChannelDataRequestData;
 
-export interface TerminalChannelConnectResponseData {
+export interface TerminalChannelHandshakeResponseData {
     id: string;
+}
+
+export interface TerminalChannelConnectResponseData {
+    accepted: boolean;
     error?: string;
 }
 
 export interface TerminalChannelDataResponseData {
     accepted: boolean;
+    error?: string;
 }
 
-export type TerminalChannelResponseData = TerminalChannelConnectResponseData
+export type TerminalChannelResponseData = TerminalChannelHandshakeResponseData
+    | TerminalChannelConnectResponseData
     | TerminalChannelDataResponseData;
