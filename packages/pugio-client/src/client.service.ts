@@ -22,6 +22,7 @@ import { channelRequests } from '@pugio/builtins';
 
 const {
     FileChannelRequest,
+    TerminalChannelRequest,
 } = channelRequests;
 
 @Service()
@@ -143,6 +144,7 @@ export class ClientService {
                     clientId: this.clientId,
                     channelRequestHandlers: [
                         FileChannelRequest,
+                        TerminalChannelRequest,
                         ...(
                             this.channelList.map((channelItem) => {
                                 const { filename } = channelItem;

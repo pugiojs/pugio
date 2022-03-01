@@ -98,8 +98,10 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         this.renewPtyKiller(id);
 
                         this.sdkService.pushChannelGateway({
-                            data,
                             eventId: `terminal:data:${id}`,
+                            data: {
+                                content: Buffer.from(data).toString('base64'),
+                            },
                         });
                     });
 
@@ -136,7 +138,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     let accepted = true;
 
                     if (ptyData) {
-                        ptyProcess.write(ptyData);
+                        ptyProcess.write(Buffer.from(ptyData, 'base64').toString());
                     } else {
                         accepted = false;
                     }
