@@ -1,5 +1,6 @@
 import { AbstractChannelRequest } from './channel-request.abstract';
 import {
+    TerminalChannelConfig,
     TerminalChannelConnectRequestData,
     TerminalChannelConnectResponseData,
     TerminalChannelDataRequestData,
@@ -7,6 +8,7 @@ import {
     TerminalChannelHandshakeResponseData,
     TerminalChannelRequestData,
     TerminalChannelResponseData,
+    TerminalStatus,
 } from '@pugio/types';
 import * as _ from 'lodash';
 import {
@@ -23,7 +25,18 @@ import * as os from 'os';
 
 export class TerminalChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
     protected ptyProcessMap = new Map<string, IPty>();
+    protected ptyStatusMap = new Map<string, TerminalStatus>();
     protected ptyKillerMap = new Map<string, ReturnType<typeof setTimeout>>();
+    protected ptyConfigMap = new Map<string, TerminalChannelConfig>();
+
+    private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
+        cols: 120,
+        rows: 80,
+    };
+
+    private defaultTerminalConfig: TerminalChannelConfig = {
+        dieTimeout: 1 * 60 * 60 * 1000,
+    };
 
     public constructor() {
         super('terminal');
@@ -38,13 +51,14 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     new Date().toISOString() + Math.random().toString(32),
                     uuidv1(),
                 );
+                this.ptyStatusMap.set(id, 'waiting');
                 return { id } as TerminalChannelHandshakeResponseData;
             }
             case 'connect': {
                 try {
                     const {
                         id,
-                        dieTimeout = 1 * 60 * 60 * 1000,
+                        dieTimeout,
                         args = [],
                         ...ptyForkOptions
                     } = data as TerminalChannelConnectRequestData;
@@ -53,29 +67,34 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         throw new Error('Parameter \'id\' must be specified');
                     }
 
-                    const defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
-                        cols: 120,
-                        rows: 80,
-                    };
+                    const ptyStatus = this.ptyStatusMap.get(id);
 
-                    const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+                    if (ptyStatus !== 'waiting' && ptyStatus !== 'running') {
+                        throw new Error(`PTY ${id} is not waiting or not running`);
+                    }
 
-                    const ptyProcess = pty.spawn(
-                        shell,
-                        args,
-                        _.merge(defaultPtyForkOptions, ptyForkOptions),
-                    );
+                    let ptyProcess = this.ptyProcessMap.get(id);
+
+                    if (!ptyProcess) {
+                        const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+
+                        ptyProcess = pty.spawn(
+                            shell,
+                            args,
+                            _.merge(this.defaultPtyForkOptions, ptyForkOptions),
+                        );
+                    }
+
+                    const ptyConfig = _.merge(this.defaultTerminalConfig, { dieTimeout });
 
                     this.ptyProcessMap.set(id, ptyProcess);
-                    this.ptyKillerMap.set(
-                        id,
-                        setTimeout(() => {
-                            this.ptyKillerMap.set(id, null);
-                            this.ptyKillerMap.delete(id);
-                        }, dieTimeout),
-                    );
+                    this.setPtyKiller(id);
+                    this.ptyConfigMap.set(id, ptyConfig);
+                    this.ptyStatusMap.set(id, 'running');
 
                     ptyProcess.onData((data) => {
+                        this.renewPtyKiller(id);
+
                         this.sdkService.pushChannelGateway({
                             data,
                             eventId: `terminal:data:${id}`,
@@ -110,6 +129,8 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         throw new Error(`PTY process ${id} not found`);
                     }
 
+                    this.renewPtyKiller(id);
+
                     let accepted = true;
 
                     if (ptyData) {
@@ -132,5 +153,36 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
             default:
                 return null;
         }
+    }
+
+    private setPtyKiller(id: string) {
+        const ptyConfig = this.ptyConfigMap.get(id) || this.defaultTerminalConfig;
+
+        this.ptyKillerMap.set(
+            id,
+            setTimeout(() => {
+                this.ptyKillerMap.set(id, null);
+                this.ptyKillerMap.delete(id);
+
+                const ptyProcess = this.ptyProcessMap.get(id);
+                if (ptyProcess) {
+                    try {
+                        ptyProcess.kill('SIGHUP');
+                    } catch (e) {}
+                }
+                this.ptyProcessMap.set(id, null);
+                this.ptyProcessMap.delete(id);
+
+                this.ptyStatusMap.set(id, 'destroyed');
+            }, ptyConfig.dieTimeout),
+        );
+    }
+
+    private renewPtyKiller(id: string) {
+        const timeoutId = this.ptyKillerMap.get(id);
+        try {
+            clearTimeout(timeoutId);
+        } catch (e) {}
+        this.setPtyKiller(id);
     }
 }

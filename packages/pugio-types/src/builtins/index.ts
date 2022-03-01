@@ -74,6 +74,8 @@ export interface TerminalChannelConnectRequestData extends TerminalChannelReques
     env?: Record<string, string>;
 }
 
+export type TerminalChannelConfig = Required<Pick<TerminalChannelConnectRequestData, 'dieTimeout'>>;
+
 export interface TerminalChannelDataRequestData extends TerminalChannelRequestBaseData {
     id: string;
     data?: string;
@@ -100,3 +102,5 @@ export interface TerminalChannelDataResponseData {
 export type TerminalChannelResponseData = TerminalChannelHandshakeResponseData
     | TerminalChannelConnectResponseData
     | TerminalChannelDataResponseData;
+
+export type TerminalStatus = 'running' | 'destroyed' | 'waiting';
