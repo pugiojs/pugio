@@ -29,7 +29,8 @@
         "node-pty": "^0.10.1",
         "redis": "^4.0.2",
         "reflect-metadata": "^0.1.13",
-        "typedi": "0.8.0"
+        "typedi": "0.8.0",
+        "xterm": "^4.17.0"
     },
     "devDependencies": {
         "@types/axios": "^0.14.0"
