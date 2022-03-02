@@ -19,6 +19,7 @@ import {
 } from 'uuid';
 import * as pty from 'node-pty';
 import {
+    IDisposable,
     IPty,
     IPtyForkOptions,
     IWindowsPtyForkOptions,
@@ -33,6 +34,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     protected ptyContentMap = new Map<string, string[]>();
     protected ptySendSequenceMap = new Map<string, number>();
     protected ptyWriteSequenceMap = new Map<string, number>();
+    protected ptyListenerMap = new Map<string, IDisposable>();
 
     private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
         cols: 120,
@@ -97,7 +99,11 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         );
                     }
 
-                    ptyProcess.onData(async (data) => {
+                    if (this.ptyListenerMap.get(id)) {
+                        this.ptyListenerMap.get(id).dispose();
+                    }
+
+                    const dataListener = ptyProcess.onData(async (data) => {
                         const content = Buffer.from(data).toString('base64');
                         const sequence = this.ptySendSequenceMap.get(id);
                         this.ptySendSequenceMap.set(id, sequence + 1);
@@ -113,6 +119,8 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                             },
                         });
                     });
+
+                    this.ptyListenerMap.set(id, dataListener);
 
                     const ptyConfig = _.merge(this.defaultTerminalConfig, { dieTimeout });
 
@@ -245,6 +253,15 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
         this.ptyContentMap.set(id, null);
         this.ptyContentMap.delete(id);
+
+        this.ptySendSequenceMap.delete(id);
+        this.ptyWriteSequenceMap.delete(id);
+
+        if (this.ptyListenerMap.get(id)) {
+            this.ptyListenerMap.get(id).dispose();
+            this.ptyListenerMap.set(id, null);
+            this.ptyListenerMap.delete(id);
+        }
 
         const ptyProcess = this.ptyProcessMap.get(id);
         if (ptyProcess) {
