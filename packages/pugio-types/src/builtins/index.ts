@@ -78,6 +78,7 @@ export type TerminalChannelConfig = Required<Pick<TerminalChannelConnectRequestD
 
 export interface TerminalChannelDataRequestData extends TerminalChannelRequestBaseData {
     id: string;
+    sequence: number;
     data?: string;
 }
 
@@ -96,10 +97,11 @@ export interface TerminalChannelHandshakeResponseData {
 
 export interface TerminalChannelConnectResponseData {
     accepted: boolean;
+    content?: string[];
     error?: string;
 }
 
-export type TerminalChannelDataResponseData = TerminalChannelConnectResponseData;
+export type TerminalChannelDataResponseData = Omit<TerminalChannelConnectResponseData, 'content'>;
 export type TerminalChannelCloseResponseData = TerminalChannelConnectResponseData;
 
 export type TerminalChannelResponseData = TerminalChannelHandshakeResponseData
