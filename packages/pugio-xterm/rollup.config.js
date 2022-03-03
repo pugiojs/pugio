@@ -18,12 +18,12 @@ function generateBanner() {
 
 module.exports = [
     {
-        input: resolveFile('src/index.ts'),
+        input: resolveFile('src/index.umd.ts'),
         output: [
             {
                 file: resolveFile('umd/index.js'),
                 format: 'umd',
-                name: 'PugioXTerm',
+                name: 'Terminal',
                 banner: generateBanner(),
                 exports: 'default',
             },
