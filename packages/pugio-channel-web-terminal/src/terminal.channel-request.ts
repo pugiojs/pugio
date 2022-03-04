@@ -47,7 +47,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     };
 
     public constructor() {
-        super('terminal');
+        super('pugio.web-terminal', 'Web Terminal (Built-in)');
     }
 
     public async handleRequest(data: TerminalChannelRequestData): Promise<TerminalChannelResponseData> {

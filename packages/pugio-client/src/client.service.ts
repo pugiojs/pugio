@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+    ChannelClientConfig,
     ChannelRequestHandlerConfigItem,
     ClientMessageHandler,
     ClientOptions,
@@ -138,7 +139,15 @@ export class ClientService {
             password: credential,
             onClientReady: async (client) => {
                 this.channelService.initialize({
-                    clientId: this.clientId,
+                    clientConfig: _.omit(
+                        this.options,
+                        [
+                            'publicKey',
+                            'privateKey',
+                            'onMessage',
+                            'channelList',
+                        ],
+                    ) as ChannelClientConfig,
                     channelRequestHandlers: [
                         FileChannelRequest,
                         TerminalChannelRequest,
@@ -147,7 +156,7 @@ export class ClientService {
                                 const { filename } = channelItem;
 
                                 try {
-                                    const channelHandlerClass = require(filename);
+                                    const channelHandlerClass = require(filename).default || require(filename);
                                     return channelHandlerClass;
                                 } catch (e) {
                                     return null;

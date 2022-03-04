@@ -27,7 +27,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
     private receiverList = new Map<string, Receiver>();
 
     public constructor() {
-        super('file');
+        super('pugio.file-manager', 'File Manager (Built-in)');
     }
 
     public async handleRequest(data: FileChannelRequestData): Promise<FileChannelResponse> {

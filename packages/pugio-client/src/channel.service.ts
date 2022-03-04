@@ -4,6 +4,7 @@ import {
     SDKService,
 } from '@pugio/sdk';
 import {
+    ChannelClientConfig,
     ChannelOptions,
     ChannelRequest,
     ClientMessageHandler,
@@ -19,9 +20,9 @@ import * as yup from 'yup';
 @Service()
 export class ChannelService {
     private channelsMap = new Map();
-    private channelRequestsMap = new Map<string, Function>();
+    private channelRequestsMap = new Map<string, AbstractChannelRequest>();
     private redisClient: RedisClient;
-    private clientId: string;
+    private clientConfig: ChannelClientConfig;
     private messageHandler: ClientMessageHandler;
 
     public constructor(
@@ -40,12 +41,12 @@ export class ChannelService {
 
     public initialize(
         {
-            clientId,
+            clientConfig,
             channelRequestHandlers = [],
             messageHandler,
         }: ChannelOptions<Type<AbstractChannelRequest>>,
     ) {
-        this.clientId = clientId;
+        this.clientConfig = clientConfig;
         this.messageHandler = messageHandler;
 
         for (const ChannelRequestHandler of channelRequestHandlers) {
@@ -53,16 +54,18 @@ export class ChannelService {
                 const channelRequestHandler = new ChannelRequestHandler();
 
                 const {
+                    name,
                     scope,
-                    handleRequest,
                 } = channelRequestHandler;
-                channelRequestHandler.setSDKService(this.sdkService);
 
-                this.channelRequestsMap.set(scope, handleRequest.bind(channelRequestHandler));
+                channelRequestHandler.setSDKService(this.sdkService);
+                channelRequestHandler.setClientConfig(clientConfig);
+
+                this.channelRequestsMap.set(scope, channelRequestHandler);
 
                 this.messageHandler({
                     level: 'info',
-                    data: `Initialize channel request handler ${scope}`,
+                    data: `Initialize channel request handler ${name} (${scope})`,
                 });
             } catch (e) {
                 this.messageHandler({
@@ -81,7 +84,7 @@ export class ChannelService {
         const handler = this.channelsMap.get(channelId);
 
         if (_.isFunction(handler)) {
-            const redisChannelId = `${this.clientId}@${channelId}`;
+            const redisChannelId = `${this.clientConfig.clientId}@${channelId}`;
             this.redisClient.subscribe(redisChannelId, handler);
             this.messageHandler({
                 level: 'info',
@@ -143,11 +146,12 @@ export class ChannelService {
             data: `Request scope: ${scope}, id: ${requestId}, content: ${data}`,
         });
 
-        const pipeFn = this.channelRequestsMap.get(scope);
+        const channelRequestHandler = this.channelRequestsMap.get(scope);
+        const channelPipeFunction = _.get(channelRequestHandler, 'handleRequest');
 
-        if (_.isFunction(pipeFn)) {
+        if (channelRequestHandler && _.isFunction(channelPipeFunction)) {
             try {
-                result = (await pipeFn(options)) || null;
+                result = (await channelPipeFunction.call(channelRequestHandler, options)) || null;
                 this.messageHandler({
                     level: 'info',
                     data: `Response scope: ${scope}, id: ${requestId}, result: ${JSON.stringify(result)}`,
@@ -165,6 +169,12 @@ export class ChannelService {
                 requestId,
                 data: result,
                 errored,
+            });
+        } else {
+            await this.sdkService.pushChannelResponse({
+                requestId,
+                data: `Channel '${scope}' is not registered in client`,
+                errored: true,
             });
         }
     }
