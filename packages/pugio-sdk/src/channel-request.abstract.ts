@@ -1,4 +1,4 @@
-import { SDKService } from '@pugio/sdk';
+import { SDKService } from './sdk.service';
 
 export abstract class AbstractChannelRequest {
     protected sdkService: SDKService;

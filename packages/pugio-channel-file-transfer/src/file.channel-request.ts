@@ -1,4 +1,4 @@
-import { AbstractChannelRequest } from './channel-request.abstract';
+import { AbstractChannelRequest } from '@pugio/sdk';
 import {
     FileChannelDownloadRequestData,
     FileChannelDownloadResponse,

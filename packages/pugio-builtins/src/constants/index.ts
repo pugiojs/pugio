@@ -1,4 +1,3 @@
-import { ClientOptions } from '@pugio/types';
 import * as os from 'os';
 import * as path from 'path';
 

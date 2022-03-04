@@ -162,3 +162,9 @@ export interface RemoveChannelFromClientRequest {
 export interface RemoveChannelFromClientResponse extends SDKResponseBaseUnit {
     id: string;
 }
+
+export interface ChannelRequest<T> {
+    id: string;
+    scope: string;
+    options: T;
+}

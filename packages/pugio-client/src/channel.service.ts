@@ -1,5 +1,8 @@
 import { ExecutionService } from '@pugio/execution';
-import { SDKService } from '@pugio/sdk';
+import {
+    AbstractChannelRequest,
+    SDKService,
+} from '@pugio/sdk';
 import {
     ChannelOptions,
     ChannelRequest,
@@ -11,7 +14,6 @@ import {
 import 'reflect-metadata';
 import { Service } from 'typedi';
 import * as _ from 'lodash';
-import { channelRequests } from '@pugio/builtins';
 import * as yup from 'yup';
 
 @Service()
@@ -41,7 +43,7 @@ export class ChannelService {
             clientId,
             channelRequestHandlers = [],
             messageHandler,
-        }: ChannelOptions<Type<channelRequests.AbstractChannelRequest>>,
+        }: ChannelOptions<Type<AbstractChannelRequest>>,
     ) {
         this.clientId = clientId;
         this.messageHandler = messageHandler;

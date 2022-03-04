@@ -8,6 +8,7 @@ export * from './execution';
 export * from './sdk';
 export * from './utils';
 export * from './cli';
-export * from './builtins';
 export * from './segmental-transferer';
 export * from './xterm';
+export * from './channel-file-transfer';
+export * from './channel-web-terminal';
