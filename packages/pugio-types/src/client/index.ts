@@ -23,9 +23,3 @@ export interface ClientOptions {
     channelList?: ChannelRequestHandlerConfigItem[];
     onMessage?: ClientMessageHandler;
 }
-
-export interface ChannelOptions<H> {
-    clientId: string;
-    channelRequestHandlers?: H[];
-    messageHandler: ClientMessageHandler;
-}

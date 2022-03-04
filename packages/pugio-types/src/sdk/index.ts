@@ -1,5 +1,8 @@
 import { ExecutionTask } from '../execution';
-import { ClientMessageHandler } from '../client';
+import {
+    ClientMessageHandler,
+    ClientOptions,
+} from '../client';
 
 export type SDKErrorHandler = (error: Error) => void;
 
@@ -161,4 +164,23 @@ export interface RemoveChannelFromClientRequest {
 
 export interface RemoveChannelFromClientResponse extends SDKResponseBaseUnit {
     id: string;
+}
+
+export interface ChannelRequest<T> {
+    id: string;
+    scope: string;
+    options: T;
+}
+
+export type ChannelClientConfig = Required<Omit<ClientOptions,
+    'onMessage' |
+    'channelList' |
+    'publicKey' |
+    'privateKey'
+>>;
+
+export interface ChannelOptions<H> {
+    clientConfig: ChannelClientConfig;
+    channelRequestHandlers?: H[];
+    messageHandler: ClientMessageHandler;
 }

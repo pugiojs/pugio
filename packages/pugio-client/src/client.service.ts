@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import {
+    ChannelClientConfig,
     ChannelRequestHandlerConfigItem,
     ClientMessageHandler,
     ClientOptions,
@@ -18,12 +19,9 @@ import { ExecutionService } from '@pugio/execution';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ChannelService } from './channel.service';
-import { channelRequests } from '@pugio/builtins';
 
-const {
-    FileChannelRequest,
-    TerminalChannelRequest,
-} = channelRequests;
+import { FileChannelRequest } from '@pugio/channel-file-transfer';
+import { TerminalChannelRequest } from '@pugio/channel-web-terminal';
 
 @Service()
 export class ClientService {
@@ -141,7 +139,15 @@ export class ClientService {
             password: credential,
             onClientReady: async (client) => {
                 this.channelService.initialize({
-                    clientId: this.clientId,
+                    clientConfig: _.omit(
+                        this.options,
+                        [
+                            'publicKey',
+                            'privateKey',
+                            'onMessage',
+                            'channelList',
+                        ],
+                    ) as ChannelClientConfig,
                     channelRequestHandlers: [
                         FileChannelRequest,
                         TerminalChannelRequest,
@@ -150,7 +156,7 @@ export class ClientService {
                                 const { filename } = channelItem;
 
                                 try {
-                                    const channelHandlerClass = require(filename);
+                                    const channelHandlerClass = require(filename).default || require(filename);
                                     return channelHandlerClass;
                                 } catch (e) {
                                     return null;
