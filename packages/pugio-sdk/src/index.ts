@@ -2,10 +2,17 @@ import 'reflect-metadata';
 import { Service } from 'typedi';
 import { RequestService } from '@pugio/request';
 import {
+    AddChannelToClientRequest,
+    AddChannelToClientResponse,
     ConnectedRequest,
     ConnectedResponse,
     ConsumeExecutionTaskRequest,
     ConsumeExecutionTaskResponse,
+    GetChannelClientRelationRequest,
+    GetChannelClientRelationResponse,
+    GetChannelDetailRequest,
+    GetChannelDetailResponse,
+    GetClientDetailResponse,
     MakeChallengeRequest,
     MakeChallengeResponse,
     PushChannelGatewayRequest,
@@ -14,6 +21,8 @@ import {
     PushChannelResponseResponse,
     PushExecutionRecordRequest,
     PushExecutionRecordResponse,
+    RemoveChannelFromClientRequest,
+    RemoveChannelFromClientResponse,
     ReportClientStatusRequest,
     ReportClientStatusResponse,
     SDKOptions,
@@ -169,6 +178,60 @@ export class SDKService {
                 method: 'post',
                 url: `/client/channel_gateway/${options.eventId}`,
                 data: options.data,
+            });
+    }
+
+    public async getClientDetail(): SDKResponse<GetClientDetailResponse> {
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'get',
+                url: '/client/info',
+            });
+    }
+
+    public async getChannelDetail(options: GetChannelDetailRequest): SDKResponse<GetChannelDetailResponse> {
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'get',
+                url: `/channel/${options.channelId}/detail`,
+            });
+    }
+
+    public async getChannelClientRelation(options: GetChannelClientRelationRequest): SDKResponse<GetChannelClientRelationResponse> {
+        const { channelId, clientId } = options;
+
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'get',
+                url: `/channel/${channelId}/client`,
+                query: { clientId },
+            });
+    }
+
+    public async addChannelToClient(options: AddChannelToClientRequest): SDKResponse<AddChannelToClientResponse> {
+        const { channelId, clientId } = options;
+
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'post',
+                url: `/channel/${channelId}/client`,
+                data: { clientId },
+            });
+    }
+
+    public async removeChannelFromClient(options: RemoveChannelFromClientRequest): SDKResponse<RemoveChannelFromClientResponse> {
+        const { channelId, clientId } = options;
+
+        return await this.requestService
+            .getInstance()
+            .request({
+                method: 'delete',
+                url: `/channel/${channelId}/client`,
+                data: { clientId },
             });
     }
 }

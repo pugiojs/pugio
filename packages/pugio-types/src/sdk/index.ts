@@ -28,10 +28,12 @@ export interface SDKResponseBaseUnit {
     updatedAt?: string;
 }
 
-export interface GetClientInfoResponse extends SDKResponseBaseUnit {
+export interface GetClientDetailResponse extends SDKResponseBaseUnit {
     id: string;
     name: string;
+    description: string;
     verified: boolean;
+    version: string;
 }
 
 export interface GetUserProfileResponse extends SDKResponseBaseUnit {
@@ -105,7 +107,7 @@ export interface ReportClientStatusRequest {
 export interface ReportClientStatusResponse extends SDKResponseBaseUnit {
     id: string;
     status: number;
-    client: GetClientInfoResponse;
+    client: GetClientDetailResponse;
     reporter: GetUserProfileResponse;
 }
 
@@ -116,4 +118,47 @@ export interface PushChannelGatewayRequest<T> {
 
 export interface PushChannelGatewayResponse extends SDKResponseBaseUnit {
     accepted: boolean;
+}
+
+export interface GetChannelDetailRequest {
+    channelId: string
+}
+
+export interface GetChannelDetailResponse extends SDKResponseBaseUnit {
+    id: string;
+    name: string;
+    description: string;
+    packageName: string;
+    bundleUrl: string;
+    registry: string;
+    avatar?: string;
+}
+
+export interface GetChannelClientRelationRequest {
+    channelId: string;
+    clientId: string;
+}
+
+export interface GetChannelClientRelationResponse extends SDKResponseBaseUnit {
+    id: string;
+    client: GetClientDetailResponse;
+    channel: GetChannelDetailResponse;
+};
+
+export interface AddChannelToClientRequest {
+    channelId: string;
+    clientId: string;
+}
+
+export interface AddChannelToClientResponse extends SDKResponseBaseUnit {
+    id: string;
+}
+
+export interface RemoveChannelFromClientRequest {
+    channelId: string;
+    clientId: string;
+}
+
+export interface RemoveChannelFromClientResponse extends SDKResponseBaseUnit {
+    id: string;
 }
