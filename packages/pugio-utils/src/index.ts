@@ -9,10 +9,14 @@ import {
     KeepAliveCallbackFunction,
     KeepAliveExitHandler,
     ChannelRequestHandlerConfigItem,
+    LoadingLogHandler,
+    LoadingLogOptions,
 } from '@pugio/types';
 import cluster from 'cluster';
 import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
+import * as spinners from 'cli-spinners';
+import * as readline from 'readline';
 
 @Service()
 export class UtilsService {
@@ -240,5 +244,47 @@ export class UtilsService {
 
     public removeChannelHandler(list: ChannelRequestHandlerConfigItem[], name: string) {
         return list.filter((listItem) => listItem.name !== name);
+    }
+
+    public writeLoadingLog({
+        text = '',
+        spinner = spinners.dots,
+        successIcon = '✔',
+        errorIcon = '✖',
+    }: LoadingLogOptions): LoadingLogHandler {
+        const updateLog = (text: string) => {
+            if (!text || !_.isString(text)) {
+                return;
+            }
+
+            readline.clearLine(process.stdout, 0);
+            readline.cursorTo(process.stdout, 0);
+            process.stdout.write(text);
+        };
+
+        if (!text || !_.isString(text)) {
+            return;
+        }
+
+        let i = 0;
+
+        const { frames, interval } = spinner;
+
+        const intervalId = setInterval(() => {
+            updateLog(frames[i = ++i % frames.length] + ' ' + text);
+        }, interval);
+
+        return {
+            success: () => {
+                clearInterval(intervalId);
+                updateLog(successIcon + ' ' + text);
+                process.stdout.write('\n');
+            },
+            error: () => {
+                clearInterval(intervalId);
+                updateLog(errorIcon + ' ' + text);
+                process.stdout.write('\n');
+            },
+        };
     }
 }
