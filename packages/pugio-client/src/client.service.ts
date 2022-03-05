@@ -19,6 +19,7 @@ import { ExecutionService } from '@pugio/execution';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ChannelService } from './channel.service';
+import { constants } from '@pugio/builtins';
 
 import { FileChannelRequest } from '@pugio/channel-file-transfer';
 import { TerminalChannelRequest } from '@pugio/channel-web-terminal';
@@ -154,12 +155,36 @@ export class ClientService {
                         TerminalChannelRequest,
                         ...(
                             this.channelList.map((channelItem) => {
-                                const { filename } = channelItem;
+                                let name;
 
                                 try {
-                                    const channelHandlerClass = require(filename).default || require(filename);
+                                    const {
+                                        name: channelName,
+                                        path: channelPathname,
+                                        type,
+                                    } = channelItem;
+
+                                    let channelHandlerClass;
+
+                                    name = channelName;
+                                    let pathname: string;
+
+                                    if (type === 'file') {
+                                        pathname = channelPathname;
+                                    } else if (type === 'package') {
+                                        pathname = path.resolve(constants.channelLib, 'node_modules', channelPathname);
+                                    } else {
+                                        throw new Error();
+                                    }
+
+                                    channelHandlerClass = require(pathname).default || require(pathname);
+
                                     return channelHandlerClass;
                                 } catch (e) {
+                                    this.messageHandler({
+                                        level: 'warn',
+                                        data: `Skip load channel with local name '${name}'`,
+                                    });
                                     return null;
                                 }
                             }).filter((item) => !_.isNull(item))

@@ -178,6 +178,17 @@ export class UtilsService {
         }
     }
 
+    public ensureChannelsDir(dirname: string) {
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+
+        if (fs.statSync(dirname).isFile()) {
+            fs.removeSync(dirname);
+            fs.mkdirpSync(dirname);
+        }
+    }
+
     public permanentlyReadFileSync(pathname: string): string {
         if (
             !_.isString(pathname) ||
@@ -202,16 +213,17 @@ export class UtilsService {
         return result;
     }
 
-    public parseChannelList(content = '') {
+    public parseChannelList(content = ''): ChannelRequestHandlerConfigItem[] {
         if (!content || !_.isString(content) || !content.trim()) {
             return [];
         }
 
         return content.trim().split('\n').map((line) => {
-            const [name, scope] = line.split(/\s+/);
+            const [name, type, value] = line.split(/\s+/);
             return {
                 name,
-                scope,
+                type,
+                path: value,
             };
         });
     }
@@ -221,22 +233,42 @@ export class UtilsService {
             return '';
         }
 
-        return list.map((listItem) => `${listItem.name} ${listItem.scope}`).join('\n');
+        return list.map((listItem) => {
+            const { name, path: value, type } = listItem;
+            return `${name} ${type} ${value}`;
+        }).join('\n');
     }
 
     public addChannelHandler(
         list: ChannelRequestHandlerConfigItem[],
         name: string,
-        scope: string,
+        packageName?: string,
+        filepath?: string,
     ) {
         const newList = Array.from(list);
-
         const existedListItemIndex = list.findIndex((listItem) => listItem.name === name);
 
+        let type;
+        let value;
+
+        if (_.isString(packageName) && packageName) {
+            type = 'package';
+            value = packageName;
+        }
+
+        if (_.isString(filepath) && filepath) {
+            type = 'file';
+            value = filepath;
+        }
+
+        if (!type) {
+            return newList;
+        }
+
         if (existedListItemIndex === -1) {
-            newList.push({ name, scope });
+            newList.push({ name, type, path: value });
         } else {
-            newList.splice(existedListItemIndex, 1, { name, scope });
+            newList.splice(existedListItemIndex, 1, { name, type, path: value });
         }
 
         return newList;

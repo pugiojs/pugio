@@ -8,7 +8,8 @@ export type KeepAliveCallbackFunction = () => any | Promise<any>;
 
 export interface ChannelRequestHandlerConfigItem {
     name: string;
-    scope: string;
+    type: string;
+    path: string;
 }
 
 export interface LoadingLogOptions {

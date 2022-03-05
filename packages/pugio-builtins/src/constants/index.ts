@@ -22,3 +22,5 @@ export const pathResolveKeyList = [
     'client.publicKey',
     'client.privateKey',
 ];
+
+export const channelLib = path.resolve(dataDir, 'channels');
