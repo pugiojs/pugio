@@ -9,12 +9,14 @@ import * as commander from 'commander';
 import * as _ from 'lodash';
 import { constants } from '@pugio/builtins';
 import Table from 'cli-table3';
+import { SDKService } from '@pugio/sdk';
 
 @Service()
 export class ChannelCommand extends AbstractCommand implements AbstractCommand {
     public constructor(
         private readonly loggerService: LoggerService,
         private readonly utilsService: UtilsService,
+        private readonly sdkService: SDKService,
     ) {
         super();
         this.setCommandName('channel');
@@ -37,14 +39,14 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             .description('Add a channel request handler')
             .command('add')
             .requiredOption('-n, --name <name>', 'Request handler name')
-            .requiredOption('-f, --filename <filename>', 'Request handler filename')
+            .requiredOption('-s, --scope <scope>', 'Request handler scope id')
             .action(async (options) => {
                 const {
                     name,
-                    filename,
+                    scope,
                 } = options;
 
-                if (!_.isString(name) || !_.isString(filename)) {
+                if (!_.isString(name) || !_.isString(scope)) {
                     this.loggerService.singleLog('Error: invalid options');
                     return;
                 }
@@ -53,7 +55,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                     fs.readFileSync(channelListFilePathname).toString(),
                 );
 
-                const newList = this.utilsService.addChannelHandler(channelList, name, filename);
+                const newList = this.utilsService.addChannelHandler(channelList, name, scope);
                 fs.writeFileSync(
                     channelListFilePathname,
                     this.utilsService.stringifyChannelList(newList),
@@ -89,7 +91,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             .command('list')
             .action(async () => {
                 const table = new Table({
-                    head: ['index', 'name', 'filename'],
+                    head: ['index', 'name', 'scope'],
                     colWidths: [10, 20, 70],
                 });
 
@@ -100,10 +102,10 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                 channelList.forEach((channelListItem, index) => {
                     const {
                         name,
-                        filename,
+                        scope,
                     } = channelListItem;
 
-                    table.push([index, name, filename]);
+                    table.push([index, name, scope]);
                 });
 
                 this.loggerService.singleLog(table.toString());

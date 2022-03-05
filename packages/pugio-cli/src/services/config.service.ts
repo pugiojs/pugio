@@ -25,12 +25,15 @@ abstract class AbstractConfig {
 @Service()
 export class ConfigService extends AbstractConfig implements AbstractConfig {
     private defaultConfigFilePathname: string;
+
     private defaultConfig: CLIConfig = {};
+    private userConfig: CLIConfig = {};
 
     public constructor(
         private readonly utilsService: UtilsService,
     ) {
         super();
+
         this.defaultConfigFilePathname = path.resolve(
             dataDir,
             defaultConfigFile,
@@ -38,14 +41,13 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
 
         this.utilsService.ensureDataDir(dataDir);
         this.ensureConfigFile();
-
-        this.config = this.readConfig(this.defaultConfigFilePathname);
-        this.defaultConfig = _.cloneDeep(this.config);
+        this.updateConfig();
     }
 
     public mergeUserConfig(configFilePathname: string) {
         if (_.isString(configFilePathname)) {
-            this.config = _.merge(this.config, this.readConfig(configFilePathname));
+            this.userConfig = this.readConfig(configFilePathname);
+            this.updateConfig();
         }
     }
 
@@ -63,8 +65,6 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
         }
 
         this.defaultConfig = _.set(this.defaultConfig, pathname, configValue);
-        this.config = _.set(this.config, pathname, configValue);
-        this.config = _.merge(this.defaultConfig, this.config);
 
         fs.writeFileSync(
             this.defaultConfigFilePathname,
@@ -73,6 +73,8 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
                 encoding: 'utf-8',
             },
         );
+
+        this.updateConfig();
     }
 
     public getConfig<T>(pathname?: string): T {
@@ -131,5 +133,10 @@ export class ConfigService extends AbstractConfig implements AbstractConfig {
                 return {};
             }
         }
+    }
+
+    private updateConfig() {
+        this.defaultConfig = this.readConfig(this.defaultConfigFilePathname);
+        this.config = _.merge(this.defaultConfig, this.userConfig);
     }
 }

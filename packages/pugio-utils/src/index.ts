@@ -208,10 +208,10 @@ export class UtilsService {
         }
 
         return content.trim().split('\n').map((line) => {
-            const [name, filename] = line.split(/\s+/);
+            const [name, scope] = line.split(/\s+/);
             return {
                 name,
-                filename,
+                scope,
             };
         });
     }
@@ -221,22 +221,22 @@ export class UtilsService {
             return '';
         }
 
-        return list.map((listItem) => `${listItem.name} ${listItem.filename}`).join('\n');
+        return list.map((listItem) => `${listItem.name} ${listItem.scope}`).join('\n');
     }
 
     public addChannelHandler(
         list: ChannelRequestHandlerConfigItem[],
         name: string,
-        filename: string,
+        scope: string,
     ) {
         const newList = Array.from(list);
 
         const existedListItemIndex = list.findIndex((listItem) => listItem.name === name);
 
         if (existedListItemIndex === -1) {
-            newList.push({ name, filename });
+            newList.push({ name, scope });
         } else {
-            newList.splice(existedListItemIndex, 1, { name, filename });
+            newList.splice(existedListItemIndex, 1, { name, scope });
         }
 
         return newList;
