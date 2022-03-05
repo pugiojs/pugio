@@ -31,6 +31,7 @@
     "dependencies": {
         "@pugio/builtins": "^1.3.0",
         "@pugio/client": "^1.3.0",
+        "@pugio/sdk": "^1.3.0",
         "@pugio/types": "^1.3.0",
         "@pugio/utils": "^1.3.0",
         "cli-table3": "^0.6.1",

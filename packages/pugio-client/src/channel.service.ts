@@ -50,27 +50,38 @@ export class ChannelService {
         this.messageHandler = messageHandler;
 
         for (const ChannelRequestHandler of channelRequestHandlers) {
+            let name;
+            let scope;
+
             try {
                 const channelRequestHandler = new ChannelRequestHandler();
 
                 const {
-                    name,
-                    scope,
+                    name: channelName,
+                    scope: channelScope,
                 } = channelRequestHandler;
+
+                name = channelName;
+                scope = channelScope;
 
                 channelRequestHandler.setSDKService(this.sdkService);
                 channelRequestHandler.setClientConfig(clientConfig);
+                channelRequestHandler.setLogger(this.messageHandler);
 
                 this.channelRequestsMap.set(scope, channelRequestHandler);
 
                 this.messageHandler({
                     level: 'info',
-                    data: `Initialize channel request handler ${name} (${scope})`,
+                    data: `Initialize channel request handler '${name} (${scope})'`,
                 });
             } catch (e) {
                 this.messageHandler({
-                    level: 'error',
-                    data: `Error during initialize channel request handler ${e.message || e.toString()}`,
+                    level: 'warn',
+                    data: `Skip initialize channel request handler '${name} (${scope})'`,
+                });
+                this.messageHandler({
+                    level: 'warn',
+                    data: `Error during initialize channel request handler '${name} (${scope})': ${e.message || e.toString()}`,
                 });
             }
         }
