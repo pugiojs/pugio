@@ -17,6 +17,7 @@ import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import * as spinners from 'cli-spinners';
 import * as readline from 'readline';
+import chalk from 'chalk';
 
 @Service()
 export class UtilsService {
@@ -219,9 +220,10 @@ export class UtilsService {
         }
 
         return content.trim().split('\n').map((line) => {
-            const [name, type, value] = line.split(/\s+/);
+            const [name, scopeId, type, value] = line.split(',');
             return {
                 name,
+                scopeId,
                 type,
                 path: value,
             };
@@ -234,17 +236,30 @@ export class UtilsService {
         }
 
         return list.map((listItem) => {
-            const { name, path: value, type } = listItem;
-            return `${name} ${type} ${value}`;
+            const {
+                name,
+                path: value,
+                type,
+                scopeId = '',
+            } = listItem;
+
+            return `${name},${scopeId},${type},${value}`;
         }).join('\n');
     }
 
-    public addChannelHandler(
+    public installChannelHandler({
+        list,
+        name,
+        scopeId = '',
+        packageName = '',
+        filepath = '',
+    }: {
         list: ChannelRequestHandlerConfigItem[],
         name: string,
+        scopeId?: string,
         packageName?: string,
         filepath?: string,
-    ) {
+    }) {
         const newList = Array.from(list);
         const existedListItemIndex = list.findIndex((listItem) => listItem.name === name);
 
@@ -265,16 +280,23 @@ export class UtilsService {
             return newList;
         }
 
+        const newData = {
+            name,
+            type,
+            scopeId,
+            path: value,
+        };
+
         if (existedListItemIndex === -1) {
-            newList.push({ name, type, path: value });
+            newList.push(newData);
         } else {
-            newList.splice(existedListItemIndex, 1, { name, type, path: value });
+            newList.splice(existedListItemIndex, 1, newData);
         }
 
         return newList;
     }
 
-    public removeChannelHandler(list: ChannelRequestHandlerConfigItem[], name: string) {
+    public uninstallChannelHandler(list: ChannelRequestHandlerConfigItem[], name: string) {
         return list.filter((listItem) => listItem.name !== name);
     }
 
@@ -282,6 +304,7 @@ export class UtilsService {
         text = '',
         spinner = spinners.dots,
         successIcon = '✔',
+        warnIcon = '⚠',
         errorIcon = '✖',
     }: LoadingLogOptions): LoadingLogHandler {
         const updateLog = (text: string) => {
@@ -306,16 +329,21 @@ export class UtilsService {
             updateLog(frames[i = ++i % frames.length] + ' ' + text);
         }, interval);
 
+        const handleLogEnd = (icon, endText: string) => {
+            clearInterval(intervalId);
+            updateLog(icon + ' ' + endText);
+            process.stdout.write('\n');
+        };
+
         return {
-            success: () => {
-                clearInterval(intervalId);
-                updateLog(successIcon + ' ' + text);
-                process.stdout.write('\n');
+            success: (successText?: string) => {
+                handleLogEnd(chalk.green(successIcon), successText || text);
             },
-            error: () => {
-                clearInterval(intervalId);
-                updateLog(errorIcon + ' ' + text);
-                process.stdout.write('\n');
+            warn: (warnText?: string) => {
+                handleLogEnd(chalk.yellow(warnIcon), warnText || text);
+            },
+            error: (errorText?: string) => {
+                handleLogEnd(chalk.red(errorIcon), errorText || text);
             },
         };
     }

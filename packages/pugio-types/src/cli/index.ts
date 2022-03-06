@@ -20,3 +20,8 @@ export interface CommandOptions<P> {
     name: string;
     program: P;
 }
+
+export interface ChannelInstallTaskItem {
+    message: string;
+    handler: (context: any) => any | Promise<any>;
+}

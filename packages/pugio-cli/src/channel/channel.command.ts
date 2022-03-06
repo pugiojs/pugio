@@ -11,7 +11,13 @@ import { constants } from '@pugio/builtins';
 import Table from 'cli-table3';
 import { SDKService } from '@pugio/sdk';
 import { ConfigService } from '../services/config.service';
-import { ClientOptions } from '@pugio/types';
+import {
+    ChannelInstallTaskItem,
+    ClientOptions,
+    GetChannelDetailResponse,
+} from '@pugio/types';
+import { spawn } from 'child_process';
+import * as semver from 'semver';
 
 @Service()
 export class ChannelCommand extends AbstractCommand implements AbstractCommand {
@@ -55,41 +61,190 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
         }
 
         command
-            .description('Add a channel request handler')
-            .command('add')
+            .description('Install a channel request handler')
+            .command('install')
             .requiredOption('-n, --name <name>', 'Request handler name')
             .option('-s, --scope <scope>', 'Request handler scope id')
             .option('-f, --filepath <filepath>', 'Request handler file path')
+            .option('-r, --registry <registry>', 'Registry URL for download channel package')
+            .option('-v, --version <version>', 'Channel package version')
             .action(async (options) => {
                 const {
                     name,
-                    scope,
+                    scope: scopeId,
                     filepath,
+                    registry,
+                    version,
                 } = options;
 
-                // TODO 从SDK中获取scope的packageName
-                if (!_.isString(name) || !_.isString(scope)) {
+                if (!_.isString(name) || !_.isString(scopeId)) {
                     this.loggerService.singleLog('Error: invalid options');
                     return;
                 }
 
-                const channelList = this.utilsService.parseChannelList(
-                    fs.readFileSync(channelListFilePathname).toString(),
-                );
+                if (_.isString(version) && !semver.valid(version)) {
+                    this.loggerService.singleLog('Error: invalid version arg');
+                }
 
-                const newList = this.utilsService.addChannelHandler(channelList, name, scope, filepath);
-                fs.writeFileSync(
-                    channelListFilePathname,
-                    this.utilsService.stringifyChannelList(newList),
-                    { encoding: 'utf-8' },
-                );
+                const tasks: ChannelInstallTaskItem[] = [];
 
-                this.loggerService.singleLog(`Channel ${name} added`);
+                if (_.isString(scopeId)) {
+                    tasks.push({
+                        message: 'Fetch channel information',
+                        handler: async () => {
+                            try {
+                                const { response } = await this.sdkService.getChannelDetail({
+                                    channelId: scopeId,
+                                });
+
+                                if (!response) {
+                                    throw new Error('Invalid channel information');
+                                }
+
+                                const { packageName } = response;
+
+                                if (!_.isString(packageName) || !packageName) {
+                                    throw new Error('Channel package');
+                                }
+
+                                return response;
+                            } catch (e) {
+                                throw new Error('Cannot fetch channel information');
+                            }
+                        },
+                    });
+                    tasks.push({
+                        message: 'Check local installation',
+                        handler: (context: GetChannelDetailResponse) => {
+                            try {
+                                const { packageName } = context;
+
+                                const channelLibPathname = path.resolve(
+                                    constants.channelLib,
+                                    'node_modules',
+                                    packageName,
+                                );
+
+                                if (
+                                    fs.existsSync(channelLibPathname) &&
+                                    fs.statSync(channelLibPathname).isDirectory()
+                                ) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            } catch (e) {
+                                return false;
+                            }
+                        },
+                    });
+                    tasks.push({
+                        message: 'Install channel package',
+                        handler: async (context: GetChannelDetailResponse) => {
+                            const {
+                                packageName,
+                                registry: defaultRegistry = 'https://registry.npmjs.org',
+                            } = context;
+
+                            try {
+                                await new Promise((resolve, reject) => {
+                                    const childProcess = spawn(
+                                        'npm',
+                                        [
+                                            'install',
+                                            version ? `${packageName}@${version}` : packageName,
+                                            '--registry',
+                                            registry || defaultRegistry,
+                                        ],
+                                        {
+                                            cwd: constants.channelLib,
+                                        },
+                                    );
+
+                                    childProcess.on('close', () => resolve(undefined));
+                                    childProcess.on('error', () => {
+                                        reject(new Error());
+                                    });
+                                });
+
+                                return packageName;
+                            } catch (e) {
+                                throw new Error(`Cannot install channel package '${packageName}' from '${defaultRegistry}'`);
+                            }
+                        },
+                    });
+                } else if (_.isString(filepath)) {
+                    tasks.push({
+                        message: 'Check file existence',
+                        handler: () => {
+                            const exists = fs.existsSync(filepath);
+
+                            if (!exists) {
+                                throw new Error('Channel file does not exist');
+                            }
+
+                            if (!fs.statSync(filepath).isFile()) {
+                                throw new Error('The pathname is not a file');
+                            }
+
+                            return true;
+                        },
+                    });
+                }
+
+                tasks.push({
+                    message: 'Write local channel list record',
+                    handler: (context: string) => {
+                        const channelList = this.utilsService.parseChannelList(
+                            fs.readFileSync(channelListFilePathname).toString(),
+                        );
+
+                        const newList = this.utilsService.installChannelHandler({
+                            list: channelList,
+                            name,
+                            scopeId,
+                            packageName: context,
+                            filepath,
+                        });
+
+                        fs.writeFileSync(
+                            channelListFilePathname,
+                            this.utilsService.stringifyChannelList(newList),
+                            { encoding: 'utf-8' },
+                        );
+
+                        return false;
+                    },
+                });
+
+                let context: any;
+
+                for (const task of tasks) {
+                    const { message, handler } = task;
+
+                    const logger = this.utilsService.writeLoadingLog({
+                        text: message,
+                    });
+
+                    const handleTask = handler.bind(this);
+
+                    try {
+                        context = await handleTask(context);
+                        logger.success();
+
+                        if (_.isBoolean(context) && !context) {
+                            process.exit(0);
+                        }
+                    } catch (e) {
+                        logger.error(e.message || e.toString());
+                        process.exit(1);
+                    }
+                }
             });
 
         command
-            .description('Remove a channel request handler')
-            .command('remove')
+            .description('Uninstall a channel request handler')
+            .command('uninstall')
             .requiredOption('-n, --name <name>', 'Request handler name')
             .action(async (options) => {
                 const { name } = options;
@@ -98,7 +253,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                     fs.readFileSync(channelListFilePathname).toString(),
                 );
 
-                const newList = this.utilsService.removeChannelHandler(channelList, name);
+                const newList = this.utilsService.uninstallChannelHandler(channelList, name);
                 fs.writeFileSync(
                     channelListFilePathname,
                     this.utilsService.stringifyChannelList(newList),

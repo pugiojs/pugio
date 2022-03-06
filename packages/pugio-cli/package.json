@@ -42,12 +42,14 @@
         "node-machine-id": "^1.1.12",
         "node-rsa": "^1.1.1",
         "reflect-metadata": "^0.1.13",
+        "semver": "^7.3.5",
         "typedi": "0.8.0",
         "yup": "^0.32.11"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/lodash": "^4.14.178",
-        "@types/node-rsa": "^1.1.1"
+        "@types/node-rsa": "^1.1.1",
+        "@types/semver": "^7.3.9"
     }
 }

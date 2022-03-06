@@ -10,16 +10,19 @@ export interface ChannelRequestHandlerConfigItem {
     name: string;
     type: string;
     path: string;
+    scopeId?: string;
 }
 
 export interface LoadingLogOptions {
     text: string;
     spinner?: Spinner;
     successIcon?: string;
+    warnIcon?: string;
     errorIcon?: string;
 }
 
 export interface LoadingLogHandler {
-    success: () => void;
-    error: () => void;
+    success: (text?: string) => void;
+    warn: (text?: string) => void;
+    error: (text?: string) => void;
 }
