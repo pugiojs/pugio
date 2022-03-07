@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
 import {
-    DecryptedExecutionData,
+    ExecutionData,
     ExecutionOptions,
     ExecutionResultHandler,
     ExecutionTask,
@@ -16,7 +16,6 @@ export const EXECUTION_SCRIPT_DIR = path.resolve(os.homedir(), './.pugio-executi
 
 @Service()
 export class ExecutionService {
-    private privateKey: string;
     private executionResultHandler: ExecutionResultHandler = _.noop;
 
     public constructor(
@@ -25,11 +24,8 @@ export class ExecutionService {
 
     public initialize(options: ExecutionOptions) {
         const {
-            privateKey,
             onExecutionResult,
         } = options;
-
-        this.privateKey = privateKey;
 
         if (_.isFunction(onExecutionResult)) {
             this.executionResultHandler = onExecutionResult;
@@ -39,20 +35,15 @@ export class ExecutionService {
     public async executeTask(executionTask: ExecutionTask) {
         const {
             id,
-            aesKey: encryptedAesKey,
             executionCwd,
-            executionData: encryptedExecutionData,
+            executionData: stringifiedExecutionData,
         } = executionTask;
 
-        let executionData: DecryptedExecutionData;
-        let aesKey: string;
+        let executionData: ExecutionData;
 
         try {
-            aesKey = this.utilsService.decryptTaskAesKey(encryptedAesKey, this.privateKey);
-            const executionDataContent = this.utilsService.decryptExecutionData(encryptedExecutionData, aesKey);
-
             try {
-                executionData = JSON.parse(executionDataContent);
+                executionData = JSON.parse(stringifiedExecutionData);
             } catch (e) {
                 this.executionResultHandler(
                     {
@@ -84,14 +75,13 @@ export class ExecutionService {
                     content,
                 } = spawnData;
 
-                const encryptedContent = this.utilsService.encryptExecutionResultContent(content, aesKey);
                 const status = error ? -1 : 3;
 
                 this.executionResultHandler(
                     {
                         status,
                         taskId: id,
-                        data: encryptedContent,
+                        data: content,
                         ...(
                             !_.isNumber(sequence)
                                 ? {}

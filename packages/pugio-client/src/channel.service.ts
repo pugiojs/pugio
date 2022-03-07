@@ -1,4 +1,3 @@
-import { ExecutionService } from '@pugio/execution';
 import {
     AbstractChannelRequest,
     SDKService,
@@ -8,7 +7,6 @@ import {
     ChannelOptions,
     ChannelRequest,
     ClientMessageHandler,
-    ExecutionTask,
     RedisClient,
     Type,
 } from '@pugio/types';
@@ -27,9 +25,7 @@ export class ChannelService {
 
     public constructor(
         private readonly sdkService: SDKService,
-        private readonly executionService: ExecutionService,
     ) {
-        this.channelsMap.set('execution', this.handleExecution);
         this.channelsMap.set('channel_request', (data) => {
             this.messageHandler({
                 level: 'info',
@@ -101,17 +97,6 @@ export class ChannelService {
                 level: 'info',
                 data: `Subscribe to channel ${redisChannelId}`,
             });
-        }
-    }
-
-    public async executeTasks(executionTasks: ExecutionTask[]) {
-        for (const executionTask of executionTasks) {
-            this.messageHandler({
-                level: 'info',
-                data: `Execute task ${executionTask.id}`,
-            });
-
-            await this.executionService.executeTask(executionTask);
         }
     }
 
@@ -187,26 +172,6 @@ export class ChannelService {
                 data: `Channel '${scope}' is not registered in client`,
                 errored: true,
             });
-        }
-    }
-
-    private async handleExecution(lockPass: string) {
-        this.messageHandler({
-            level: 'info',
-            data: `Received task with lock: ${lockPass}`,
-        });
-
-        const { response: executionTasks } = await this.sdkService.consumeExecutionTask({
-            lockPass,
-        });
-
-        if (executionTasks && executionTasks.length > 0) {
-            this.messageHandler({
-                level: 'info',
-                data: `Got ${executionTasks.length} task(s)`,
-            });
-
-            await this.executeTasks(executionTasks);
         }
     }
 }

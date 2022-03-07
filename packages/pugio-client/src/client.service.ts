@@ -15,7 +15,6 @@ import { ConnectionService } from '@pugio/connection';
 import { SDKService } from '@pugio/sdk';
 import { machineIdSync } from 'node-machine-id';
 import * as yup from 'yup';
-import { ExecutionService } from '@pugio/execution';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ChannelService } from './channel.service';
@@ -23,6 +22,7 @@ import { constants } from '@pugio/builtins';
 
 import { FileChannelRequest } from '@pugio/channel-file-transfer';
 import { TerminalChannelRequest } from '@pugio/channel-web-terminal';
+import { PipelinesChannelRequest } from '@pugio/channel-pipelines';
 
 @Service()
 export class ClientService {
@@ -42,7 +42,6 @@ export class ClientService {
         private readonly connectionService: ConnectionService,
         private readonly utilsService: UtilsService,
         private readonly sdkService: SDKService,
-        private readonly executionService: ExecutionService,
         private readonly channelService: ChannelService,
     ) {}
 
@@ -153,6 +152,7 @@ export class ClientService {
                     channelRequestHandlers: [
                         FileChannelRequest,
                         TerminalChannelRequest,
+                        PipelinesChannelRequest,
                         ...(
                             this.channelList.map((channelItem) => {
                                 let name;
@@ -219,7 +219,6 @@ export class ClientService {
 
     private async handleClientReady() {
         const channels = [
-            'execution',
             'channel_request',
         ];
 
@@ -238,49 +237,9 @@ export class ClientService {
 
         this.channelService.setRedisClient(this.redisClient);
 
-        const {
-            publicKey,
-            privateKey,
-        } = this;
-
-        this.executionService.initialize({
-            publicKey,
-            privateKey,
-            onExecutionResult: async (result) => {
-                const { taskId, data: content, status, sequence } = result;
-                try {
-                    await this.sdkService.pushExecutionRecord({
-                        taskId,
-                        content,
-                        status,
-                        sequence,
-                    });
-                    this.messageHandler({
-                        level: 'info',
-                        data: `Push execution record of task ${taskId}, sequence: ${sequence}, status: ${status}`,
-                    });
-                } catch {}
-            },
-        });
-
         channels.forEach((channelId) => {
             this.channelService.subscribeChannel(channelId);
         });
-
-        const {
-            response: remainedExecutionTasks,
-        } = await this.sdkService.consumeExecutionTask({
-            all: 1,
-        });
-
-        if (remainedExecutionTasks && remainedExecutionTasks.length > 0) {
-            this.messageHandler({
-                level: 'info',
-                data: `Pulled ${remainedExecutionTasks.length} task(s)`,
-            });
-
-            await this.channelService.executeTasks(remainedExecutionTasks);
-        }
 
         return intervalId;
     }
