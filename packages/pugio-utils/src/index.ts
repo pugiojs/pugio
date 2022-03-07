@@ -18,6 +18,10 @@ import * as fs from 'fs-extra';
 import * as spinners from 'cli-spinners';
 import * as readline from 'readline';
 import chalk from 'chalk';
+import {
+    ExecOptions,
+} from 'child_process';
+import * as path from 'path';
 
 @Service()
 export class UtilsService {
@@ -188,6 +192,12 @@ export class UtilsService {
             fs.removeSync(dirname);
             fs.mkdirpSync(dirname);
         }
+
+        if (!fs.existsSync(path.resolve(dirname, 'package.json'))) {
+            try {
+                child_process.execSync('npm init -y', { cwd: dirname });
+            } catch (e) {}
+        }
     }
 
     public permanentlyReadFileSync(pathname: string): string {
@@ -346,5 +356,17 @@ export class UtilsService {
                 handleLogEnd(chalk.red(errorIcon), errorText || text);
             },
         };
+    }
+
+    public async exec(command: string, options: ExecOptions = {}): Promise<string> {
+        return new Promise((resolve, reject) => {
+            child_process.exec(command, options, (error, stdout) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
     }
 }

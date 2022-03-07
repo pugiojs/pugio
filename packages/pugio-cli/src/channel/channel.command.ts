@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Service } from 'typedi';
 import { UtilsService } from '@pugio/utils';
@@ -12,11 +12,15 @@ import Table from 'cli-table3';
 import { SDKService } from '@pugio/sdk';
 import { ConfigService } from '../services/config.service';
 import {
-    ChannelInstallTaskItem,
+    ChannelRequestHandlerConfigItem,
+    ChannelTaskItem,
     ClientOptions,
     GetChannelDetailResponse,
 } from '@pugio/types';
-import { spawn } from 'child_process';
+import {
+    exec as execShell,
+    ExecOptions,
+} from 'child_process';
 import * as semver from 'semver';
 
 @Service()
@@ -45,7 +49,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             apiVersion,
         } = this.configService.getMappedConfig(maps.cliToClient) as ClientOptions;
 
-        const clientKey = `${apiKey}:${clientId}`;
+        const clientKey = Buffer.from(`${apiKey}:${clientId}`).toString('base64');
 
         this.sdkService.initialize({
             clientKey,
@@ -84,9 +88,10 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
 
                 if (_.isString(version) && !semver.valid(version)) {
                     this.loggerService.singleLog('Error: invalid version arg');
+                    return;
                 }
 
-                const tasks: ChannelInstallTaskItem[] = [];
+                const tasks: ChannelTaskItem[] = [];
 
                 if (_.isString(scopeId)) {
                     tasks.push({
@@ -125,14 +130,17 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                                     packageName,
                                 );
 
-                                if (
-                                    fs.existsSync(channelLibPathname) &&
-                                    fs.statSync(channelLibPathname).isDirectory()
-                                ) {
-                                    return true;
-                                } else {
-                                    return false;
+                                if (fs.existsSync(channelLibPathname) && _.isString(version) && version) {
+                                    const channelPackageConfig = fs.readJsonSync(
+                                        path.resolve(channelLibPathname, 'package.json'),
+                                    );
+
+                                    if (version === _.get(channelPackageConfig, 'version')) {
+                                        return false;
+                                    }
                                 }
+
+                                return context;
                             } catch (e) {
                                 return false;
                             }
@@ -147,26 +155,19 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                             } = context;
 
                             try {
-                                await new Promise((resolve, reject) => {
-                                    const childProcess = spawn(
+                                await this.utilsService.exec(
+                                    [
                                         'npm',
-                                        [
-                                            'install',
-                                            version ? `${packageName}@${version}` : packageName,
-                                            '--registry',
-                                            registry || defaultRegistry,
-                                        ],
-                                        {
-                                            cwd: constants.channelLib,
-                                        },
-                                    );
-
-                                    childProcess.on('close', () => resolve(undefined));
-                                    childProcess.on('error', () => {
-                                        reject(new Error());
-                                    });
-                                });
-
+                                        'install',
+                                        version ? `${packageName}@${version}` : packageName,
+                                        '--registry',
+                                        registry || defaultRegistry,
+                                        '-S',
+                                    ].join(' '),
+                                    {
+                                        cwd: constants.channelLib,
+                                    },
+                                );
                                 return packageName;
                             } catch (e) {
                                 throw new Error(`Cannot install channel package '${packageName}' from '${defaultRegistry}'`);
@@ -217,29 +218,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                     },
                 });
 
-                let context: any;
-
-                for (const task of tasks) {
-                    const { message, handler } = task;
-
-                    const logger = this.utilsService.writeLoadingLog({
-                        text: message,
-                    });
-
-                    const handleTask = handler.bind(this);
-
-                    try {
-                        context = await handleTask(context);
-                        logger.success();
-
-                        if (_.isBoolean(context) && !context) {
-                            process.exit(0);
-                        }
-                    } catch (e) {
-                        logger.error(e.message || e.toString());
-                        process.exit(1);
-                    }
-                }
+                await this.runTasks(tasks);
             });
 
         command
@@ -249,18 +228,80 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             .action(async (options) => {
                 const { name } = options;
 
-                const channelList = this.utilsService.parseChannelList(
-                    fs.readFileSync(channelListFilePathname).toString(),
-                );
+                if (!_.isString(name) && !name) {
+                    this.loggerService.singleLog('Error: invalid name arg');
+                    return;
+                }
 
-                const newList = this.utilsService.uninstallChannelHandler(channelList, name);
-                fs.writeFileSync(
-                    channelListFilePathname,
-                    this.utilsService.stringifyChannelList(newList),
-                    { encoding: 'utf-8' },
-                );
+                const tasks: ChannelTaskItem[] = [];
 
-                this.loggerService.singleLog(`Channel ${name} removed`);
+                tasks.push({
+                    message: 'Read local channel task list',
+                    handler: () => {
+                        const channelList = this.utilsService.parseChannelList(
+                            fs.readFileSync(channelListFilePathname).toString(),
+                        );
+
+                        const channelItem = channelList.find((item) => item.name === name);
+
+                        return channelItem || false;
+                    },
+                });
+
+                tasks.push({
+                    message: 'Uninstall channel packages',
+                    handler: async (channelItem: ChannelRequestHandlerConfigItem) => {
+                        const {
+                            name,
+                            type,
+                            path: pathname,
+                        } = channelItem;
+
+                        if (type === 'file') {
+                            return channelItem;
+                        } else if (type === 'package') {
+                            try {
+                                await this.utilsService.exec(
+                                    [
+                                        'npm',
+                                        'uninstall',
+                                        pathname,
+                                        '-S',
+                                    ].join(' '),
+                                    {
+                                        cwd: constants.channelLib,
+                                    },
+                                );
+                                return name;
+                            } catch (e) {
+                                throw new Error(`Cannot uninstall channel '${name}'`);
+                            }
+                        } else {
+                            return false;
+                        }
+                    },
+                });
+
+                tasks.push({
+                    message: 'Delist local channel list record',
+                    handler: (name: string) => {
+                        const list = this.utilsService.parseChannelList(
+                            fs.readFileSync(channelListFilePathname).toString(),
+                        );
+
+                        const newList = this.utilsService.uninstallChannelHandler(list, name);
+
+                        fs.writeFileSync(
+                            channelListFilePathname,
+                            this.utilsService.stringifyChannelList(newList),
+                            { encoding: 'utf-8' },
+                        );
+
+                        return false;
+                    },
+                });
+
+                await this.runTasks(tasks);
             });
 
         command
@@ -290,5 +331,31 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
             });
 
         return command;
+    }
+
+    private async runTasks(tasks: ChannelTaskItem[]) {
+        let context: any;
+
+        for (const task of tasks) {
+            const { message, handler } = task;
+
+            const logger = this.utilsService.writeLoadingLog({
+                text: message,
+            });
+
+            const handleTask = handler.bind(this);
+
+            try {
+                context = await handleTask(context);
+                logger.success();
+
+                if (_.isBoolean(context) && !context) {
+                    process.exit(0);
+                }
+            } catch (e) {
+                logger.error(e.message || e.toString());
+                process.exit(1);
+            }
+        }
     }
 }

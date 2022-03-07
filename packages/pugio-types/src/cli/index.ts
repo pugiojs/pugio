@@ -21,7 +21,7 @@ export interface CommandOptions<P> {
     program: P;
 }
 
-export interface ChannelInstallTaskItem {
+export interface ChannelTaskItem {
     message: string;
     handler: (context: any) => any | Promise<any>;
 }
