@@ -17,11 +17,14 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
             onExecutionResult: async (result) => {
                 const { taskId, data: content, status, sequence } = result;
                 try {
-                    await this.sdkService.pushExecutionRecord({
-                        taskId,
-                        content,
-                        status,
-                        sequence,
+                    await this.sdkService.pushChannelGateway({
+                        eventId: `execution_result:${taskId}`,
+                        data: {
+                            taskId,
+                            content,
+                            status,
+                            sequence,
+                        },
                     });
                     this.log({
                         level: 'info',
