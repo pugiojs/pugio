@@ -12,3 +12,4 @@ export * from './segmental-transferer';
 export * from './xterm';
 export * from './channel-file-transfer';
 export * from './channel-web-terminal';
+export * from './channel-pipelines';

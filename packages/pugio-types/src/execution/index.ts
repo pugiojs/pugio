@@ -1,6 +1,5 @@
 export interface ExecutionTask {
     id: string;
-    aesKey: string;
     executionCwd: string;
     executionData: string;
 }
@@ -15,12 +14,10 @@ export interface ExecutionResult {
 export type ExecutionResultHandler = (result: ExecutionResult) => void | Promise<void>;
 
 export interface ExecutionOptions {
-    publicKey: string;
-    privateKey: string;
     onExecutionResult?: ExecutionResultHandler;
 }
 
-export interface DecryptedExecutionData {
+export interface ExecutionData {
     script?: string;
     preCommandSegment?: string;
     postCommandSegment?: string;

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import {
-    DecryptedExecutionData,
+    ExecutionData,
     SpawnDataHandler,
 } from '@pugio/types';
 
@@ -15,7 +15,7 @@ export class Execution {
     public constructor(
         private readonly cwd: string,
         private readonly tempDir: string,
-        private readonly executionData: DecryptedExecutionData = {},
+        private readonly executionData: ExecutionData = {},
         private readonly handleSpawnData: SpawnDataHandler = _.noop,
         private readonly handleClose: () => void | Promise<void> = _.noop,
     ) {}
