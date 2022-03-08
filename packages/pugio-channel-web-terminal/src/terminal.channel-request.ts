@@ -9,6 +9,8 @@ import {
     TerminalChannelDataResponseData,
     TerminalChannelHandshakeResponseData,
     TerminalChannelRequestData,
+    TerminalChannelResizeRequestData,
+    TerminalChannelResizeResponseData,
     TerminalChannelResponseData,
     TerminalStatus,
 } from '@pugio/types';
@@ -34,7 +36,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     protected ptyContentMap = new Map<string, string[]>();
     protected ptySendSequenceMap = new Map<string, number>();
     protected ptyWriteSequenceMap = new Map<string, number>();
-    protected ptyListenerMap = new Map<string, IDisposable>();
+    protected ptyListenersMap = new Map<string, IDisposable[]>();
 
     private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
         cols: 120,
@@ -99,9 +101,16 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         );
                     }
 
-                    if (this.ptyListenerMap.get(id)) {
-                        this.ptyListenerMap.get(id).dispose();
+                    if (_.isArray(this.ptyListenersMap.get(id))) {
+                        const oldPtyListeners = this.ptyListenersMap.get(id);
+                        while (oldPtyListeners.length > 0) {
+                            oldPtyListeners.pop().dispose();
+                        }
+                    } else {
+                        this.ptyListenersMap.set(id, []);
                     }
+
+                    const listeners = this.ptyListenersMap.get(id);
 
                     const dataListener = ptyProcess.onData(async (data) => {
                         const content = Buffer.from(data).toString('base64');
@@ -112,7 +121,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         ptyContent.push(content);
 
                         await this.sdkService.pushChannelGateway({
-                            eventId: `terminal:data:${id}`,
+                            eventId: `terminal:${id}:data`,
                             data: {
                                 content,
                                 sequence: sequence + 1,
@@ -120,7 +129,15 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         });
                     });
 
-                    this.ptyListenerMap.set(id, dataListener);
+                    const closeListener = ptyProcess.onExit(async (data) => {
+                        await this.killPty(id);
+                        await this.sdkService.pushChannelGateway({
+                            eventId: `terminal:${id}:close`,
+                            data,
+                        });
+                    });
+
+                    listeners.push(dataListener, closeListener);
 
                     const ptyConfig = _.merge(this.defaultTerminalConfig, { dieTimeout });
 
@@ -191,6 +208,41 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     }
                 });
             }
+            case 'resize': {
+                try {
+                    const {
+                        id,
+                        cols,
+                        rows,
+                    } = data as TerminalChannelResizeRequestData;
+
+                    const result = {
+                        accepted: false,
+                        error: null,
+                    } as TerminalChannelResizeResponseData;
+
+                    const ptyProcess = this.ptyProcessMap.get(id);
+
+                    if (!ptyProcess) {
+                        result.error = 'Cannot find pty process';
+                        return result;
+                    }
+
+                    const newCols = _.isNumber(cols) ? cols : ptyProcess.cols;
+                    const newRows = _.isNumber(rows) ? rows : ptyProcess.rows;
+
+                    ptyProcess.resize(newCols, newRows);
+
+                    result.accepted = true;
+
+                    return result;
+                } catch (e) {
+                    return {
+                        accepted: true,
+                        error: e.message || e.toString(),
+                    } as TerminalChannelResizeResponseData;
+                }
+            }
             case 'close': {
                 try {
                     const {
@@ -257,10 +309,14 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
         this.ptySendSequenceMap.delete(id);
         this.ptyWriteSequenceMap.delete(id);
 
-        if (this.ptyListenerMap.get(id)) {
-            this.ptyListenerMap.get(id).dispose();
-            this.ptyListenerMap.set(id, null);
-            this.ptyListenerMap.delete(id);
+        const ptyListeners = this.ptyListenersMap.get(id);
+
+        if (_.isArray(ptyListeners)) {
+            while (ptyListeners.length > 0) {
+                ptyListeners.pop().dispose();
+            }
+            this.ptyListenersMap.set(id, null);
+            this.ptyListenersMap.delete(id);
         }
 
         const ptyProcess = this.ptyProcessMap.get(id);

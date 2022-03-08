@@ -26,10 +26,17 @@ export interface TerminalChannelCloseRequestData extends TerminalChannelRequestB
     id: string;
 }
 
+export interface TerminalChannelResizeRequestData extends TerminalChannelRequestBaseData {
+    id: string;
+    rows?: number;
+    cols?: number;
+}
+
 export type TerminalChannelRequestData = TerminalChannelHandshakeRequestData
     | TerminalChannelConnectRequestData
     | TerminalChannelDataRequestData
-    | TerminalChannelCloseRequestData;
+    | TerminalChannelCloseRequestData
+    | TerminalChannelResizeRequestData;
 
 export interface TerminalChannelHandshakeResponseData {
     id: string;
@@ -42,7 +49,8 @@ export interface TerminalChannelConnectResponseData {
 }
 
 export type TerminalChannelDataResponseData = Omit<TerminalChannelConnectResponseData, 'content'>;
-export type TerminalChannelCloseResponseData = TerminalChannelConnectResponseData;
+export type TerminalChannelCloseResponseData = TerminalChannelDataResponseData;
+export type TerminalChannelResizeResponseData = TerminalChannelDataResponseData;
 
 export type TerminalChannelResponseData = TerminalChannelHandshakeResponseData
     | TerminalChannelConnectResponseData

@@ -56,7 +56,7 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
             await this.executeTasks(executionTasks);
         }
 
-        return { done: true};
+        return { done: true };
     }
 
     private async executeTasks(executionTasks: ExecutionTask[]) {
