@@ -52,7 +52,6 @@ export abstract class AbstractManagerService {
                     if (responseStatus >= 400) {
                         data.error = responseContent;
                         if (_.isFunction(errorHandler)) {
-                            console.log('LENCONDA:222', response);
                             errorHandler(new Error(responseContent.message));
                         }
                     } else {

@@ -101,7 +101,6 @@ export class ClientService {
             apiVersion,
             onMessage: this.messageHandler,
             onError: (error) => {
-                console.log('LENCONDA:111', error);
                 this.messageHandler({
                     level: 'error',
                     data: error.message,
