@@ -138,7 +138,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     chunkSize,
                     sender: async ({ index, chunkCount, chunkContent, md5 }) => {
                         try {
-                            await this.sdkService.pushChannelGateway({
+                            await this.clientManagerService.pushChannelGateway({
                                 eventId: 'file:download:processing',
                                 data: {
                                     index,
@@ -158,7 +158,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     },
                     onError: async (error) => {
                         try {
-                            await this.sdkService.pushChannelGateway({
+                            await this.clientManagerService.pushChannelGateway({
                                 eventId: 'file:download:errored',
                                 data: {
                                     fileId: id,
@@ -175,7 +175,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
 
                         if (total === succeeded) {
                             try {
-                                await this.sdkService.pushChannelGateway({
+                                await this.clientManagerService.pushChannelGateway({
                                     eventId: 'file:download:finished',
                                     data: {
                                         fileId: id,

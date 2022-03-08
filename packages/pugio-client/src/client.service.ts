@@ -12,7 +12,7 @@ import { UtilsService } from '@pugio/utils';
 import * as _ from 'lodash';
 import { Service } from 'typedi';
 import { ConnectionService } from '@pugio/connection';
-import { SDKService } from '@pugio/sdk';
+import { ClientManagerService } from '@pugio/sdk';
 import { machineIdSync } from 'node-machine-id';
 import * as yup from 'yup';
 import * as fs from 'fs-extra';
@@ -41,7 +41,7 @@ export class ClientService {
     public constructor(
         private readonly connectionService: ConnectionService,
         private readonly utilsService: UtilsService,
-        private readonly sdkService: SDKService,
+        private readonly clientManagerService: ClientManagerService,
         private readonly channelService: ChannelService,
     ) {}
 
@@ -95,12 +95,13 @@ export class ClientService {
 
         this.clientKey = this.utilsService.generateClientKey(this.apiKey, this.clientId);
 
-        this.sdkService.initialize({
+        this.clientManagerService.initialize({
             clientKey: this.clientKey,
             hostname,
             apiVersion,
             onMessage: this.messageHandler,
             onError: (error) => {
+                console.log('LENCONDA:111', error);
                 this.messageHandler({
                     level: 'error',
                     data: error.message,
@@ -124,7 +125,7 @@ export class ClientService {
 
         const {
             response = {} as MakeChallengeResponse,
-        } = await this.sdkService.makeChallenge({
+        } = await this.clientManagerService.makeChallenge({
             version,
             deviceId: this.machineId,
         });
@@ -195,7 +196,7 @@ export class ClientService {
 
                 if (client.isOpen) {
                     this.redisClient = client;
-                    await this.sdkService.connected({ credential });
+                    await this.clientManagerService.connected({ credential });
                     intervalId = await this.handleClientReady();
                 }
             },
@@ -224,7 +225,7 @@ export class ClientService {
 
         const intervalId = setInterval(() => {
             const plaintext = Math.random().toString(32).slice(2);
-            this.sdkService.reportClientStatus({
+            this.clientManagerService.reportClientStatus({
                 plaintext,
                 cipher: this.utilsService.encryptContentWithRSAPublicKey(plaintext, this.publicKey),
             });

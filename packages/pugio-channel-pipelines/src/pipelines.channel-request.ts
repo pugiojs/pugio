@@ -17,7 +17,7 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
             onExecutionResult: async (result) => {
                 const { taskId, data: content, status, sequence } = result;
                 try {
-                    await this.sdkService.pushChannelGateway({
+                    await this.clientManagerService.pushChannelGateway({
                         eventId: `execution_result:${taskId}`,
                         data: {
                             taskId,
@@ -43,7 +43,7 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
             data: `Received task with lock: ${lockPass}`,
         });
 
-        const { response: executionTasks } = await this.sdkService.consumeExecutionTask({
+        const { response: executionTasks } = await this.clientManagerService.consumeExecutionTask({
             lockPass,
         });
 
@@ -73,7 +73,7 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
     private async clearExecutionTaskQueue() {
         const {
             response: remainedExecutionTasks,
-        } = await this.sdkService.consumeExecutionTask({
+        } = await this.clientManagerService.consumeExecutionTask({
             all: 1,
         });
 

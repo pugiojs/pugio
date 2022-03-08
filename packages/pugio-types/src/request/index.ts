@@ -2,7 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import { ClientMessageHandler } from '../client';
 
 export interface RequestOptions {
-    clientKey?: string;
+    headers?: Record<string, string>;
     requestConfig?: AxiosRequestConfig;
     json?: boolean;
     transformCase?: boolean;

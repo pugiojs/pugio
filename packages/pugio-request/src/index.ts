@@ -57,7 +57,7 @@ export class RequestService {
         instanceModifier?: (instance: Request) => void,
     ) {
         const {
-            clientKey = '',
+            headers = {},
             requestConfig = {},
             json = true,
             transformCase = false,
@@ -93,8 +93,8 @@ export class RequestService {
         this.instance.interceptors.request.use((config) => {
             return _.merge(config, {
                 headers: {
-                    'CLIENT-KEY': clientKey,
                     'Content-Type': 'application/json',
+                    ...headers,
                 },
             });
         });

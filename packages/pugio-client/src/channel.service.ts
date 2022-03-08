@@ -1,6 +1,6 @@
 import {
     AbstractChannelRequest,
-    SDKService,
+    ClientManagerService,
 } from '@pugio/sdk';
 import {
     ChannelClientConfig,
@@ -24,7 +24,7 @@ export class ChannelService {
     private messageHandler: ClientMessageHandler;
 
     public constructor(
-        private readonly sdkService: SDKService,
+        private readonly clientManagerService: ClientManagerService,
     ) {
         this.channelsMap.set('channel_request', (data) => {
             this.messageHandler({
@@ -60,7 +60,7 @@ export class ChannelService {
                 name = channelName;
                 scope = channelScope;
 
-                channelRequestHandler.setSDKService(this.sdkService);
+                channelRequestHandler.setClientManager(this.clientManagerService);
                 channelRequestHandler.setClientConfig(clientConfig);
                 channelRequestHandler.setLogger(this.messageHandler);
 
@@ -161,13 +161,13 @@ export class ChannelService {
                 });
             }
 
-            await this.sdkService.pushChannelResponse({
+            await this.clientManagerService.pushChannelResponse({
                 requestId,
                 data: result,
                 errored,
             });
         } else {
-            await this.sdkService.pushChannelResponse({
+            await this.clientManagerService.pushChannelResponse({
                 requestId,
                 data: `Channel '${scope}' is not registered in client`,
                 errored: true,

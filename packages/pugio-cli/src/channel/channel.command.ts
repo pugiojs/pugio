@@ -9,7 +9,7 @@ import * as commander from 'commander';
 import * as _ from 'lodash';
 import { constants } from '@pugio/builtins';
 import Table from 'cli-table3';
-import { SDKService } from '@pugio/sdk';
+import { ClientManagerService } from '@pugio/sdk';
 import { ConfigService } from '../services/config.service';
 import {
     ChannelRequestHandlerConfigItem,
@@ -17,10 +17,6 @@ import {
     ClientOptions,
     GetChannelDetailResponse,
 } from '@pugio/types';
-import {
-    exec as execShell,
-    ExecOptions,
-} from 'child_process';
 import * as semver from 'semver';
 
 @Service()
@@ -28,7 +24,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
     public constructor(
         private readonly loggerService: LoggerService,
         private readonly utilsService: UtilsService,
-        private readonly sdkService: SDKService,
+        private readonly clientManagerService: ClientManagerService,
         private readonly configService: ConfigService,
     ) {
         super();
@@ -51,7 +47,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
 
         const clientKey = Buffer.from(`${apiKey}:${clientId}`).toString('base64');
 
-        this.sdkService.initialize({
+        this.clientManagerService.initialize({
             clientKey,
             hostname,
             apiVersion,
@@ -98,7 +94,7 @@ export class ChannelCommand extends AbstractCommand implements AbstractCommand {
                         message: 'Fetch channel information',
                         handler: async () => {
                             try {
-                                const { response } = await this.sdkService.getChannelDetail({
+                                const { response } = await this.clientManagerService.getChannelDetail({
                                     channelId: scopeId,
                                 });
 
