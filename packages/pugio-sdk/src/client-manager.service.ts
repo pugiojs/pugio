@@ -198,7 +198,7 @@ export class ClientManagerService extends AbstractManagerService implements Abst
 export class ClientManager extends ClientManagerService {
     public constructor(options: ClientManagerOptions = {}) {
         super(
-            new RequestService(new UtilsService()),
+            new RequestService(),
             new UtilsService(),
         );
 

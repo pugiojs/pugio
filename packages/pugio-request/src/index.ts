@@ -49,7 +49,7 @@ export class RequestService {
     private transformCase: boolean;
 
     public constructor(
-        private readonly utilsService: UtilsService,
+        private readonly utilsService: UtilsService = new UtilsService(),
     ) {}
 
     public initialize(

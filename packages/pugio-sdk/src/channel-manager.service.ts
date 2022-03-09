@@ -64,7 +64,7 @@ export class ChannelManagerService extends AbstractManagerService implements Abs
 export class ChannelManager extends ChannelManagerService {
     public constructor(options: ChannelManagerOptions = {}) {
         super(
-            new RequestService(new UtilsService()),
+            new RequestService(),
             new UtilsService(),
         );
 
