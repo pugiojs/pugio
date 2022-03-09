@@ -121,7 +121,12 @@ export class RequestService {
     }
 
     public getInstance(options: ResponseGetInstanceOptions = {}) {
-        const { json: getInstanceJson = this.json } = options;
+        const {
+            json: getInstanceJson = this.json,
+            ...otherOptions
+        } = options;
+
+        const axiosOptions = otherOptions || {};
         const currentInstance = _.cloneDeep(this.instance);
 
         if (getInstanceJson) {
@@ -168,6 +173,12 @@ export class RequestService {
                         : []
                 ),
             ];
+        }
+
+        if (Object.keys(axiosOptions).length > 0) {
+            Object.keys(axiosOptions).forEach((key) => {
+                currentInstance.defaults[key] = axiosOptions[key];
+            });
         }
 
         return currentInstance;
