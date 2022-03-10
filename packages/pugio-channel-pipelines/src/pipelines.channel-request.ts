@@ -67,10 +67,6 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
 
                 return { done: true } as PipelinesTriggerResponseData;
             }
-            // TODO remove
-            case 'test': {
-                return { requestBody } as any;
-            }
             default:
                 return null;
         }

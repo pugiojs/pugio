@@ -51,7 +51,7 @@ export class ChannelManagerService extends AbstractManagerService implements Abs
             .getInstance()
             .request({
                 method: 'post',
-                url: `/channel/${clientId}/channel_request`,
+                url: `/client/${clientId}/channel_request`,
                 data: {
                     data,
                 },
