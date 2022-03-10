@@ -1,4 +1,4 @@
-import { SDKService } from './sdk.service';
+import { ClientManagerService } from './client-manager.service';
 import {
     ChannelClientConfig,
     ClientMessage,
@@ -7,7 +7,7 @@ import {
 import * as _ from 'lodash';
 
 export abstract class AbstractChannelRequest {
-    protected sdkService: SDKService;
+    protected clientManagerService: ClientManagerService;
     protected client: ChannelClientConfig;
     protected log: ClientMessageHandler = _.noop;
 
@@ -16,8 +16,8 @@ export abstract class AbstractChannelRequest {
         public readonly name: string,
     ) {}
 
-    public setSDKService(sdkService: SDKService) {
-        this.sdkService = sdkService;
+    public setClientManager(clientManagerService: ClientManagerService) {
+        this.clientManagerService = clientManagerService;
     }
 
     public setClientConfig(config: ChannelClientConfig) {

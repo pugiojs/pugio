@@ -120,7 +120,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
                         ptyContent.push(content);
 
-                        await this.sdkService.pushChannelGateway({
+                        await this.clientManagerService.pushChannelGateway({
                             eventId: `terminal:${id}:data`,
                             data: {
                                 content,
@@ -131,7 +131,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
                     const closeListener = ptyProcess.onExit(async (data) => {
                         await this.killPty(id);
-                        await this.sdkService.pushChannelGateway({
+                        await this.clientManagerService.pushChannelGateway({
                             eventId: `terminal:${id}:close`,
                             data,
                         });

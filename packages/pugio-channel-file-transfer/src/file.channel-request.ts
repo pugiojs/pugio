@@ -44,32 +44,28 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     !fs.existsSync(pathname) ||
                     !fs.statSync(pathname).isDirectory()
                 ) {
-                    return null;
+                    throw new Error();
                 }
 
-                try {
-                    const dirItems = fs.readdirSync(pathname, {
-                        withFileTypes: true,
-                        encoding: 'utf-8',
-                    });
+                const dirItems = fs.readdirSync(pathname, {
+                    withFileTypes: true,
+                    encoding: 'utf-8',
+                });
 
-                    const items = dirItems.map((dirItem) => {
-                        const stat = fs.statSync(path.resolve());
-                        return {
-                            ...stat,
-                            name: dirItem.name,
-                            isFIFO: stat.isFIFO(),
-                            isFile: stat.isFile(),
-                            isDirectory: stat.isDirectory(),
-                            isSocket: stat.isSocket(),
-                            isSymbolicLink: stat.isSymbolicLink(),
-                        };
-                    });
+                const items = dirItems.map((dirItem) => {
+                    const stat = fs.statSync(path.resolve(pathname, dirItem.name));
+                    return {
+                        ...stat,
+                        name: dirItem.name,
+                        isFIFO: stat.isFIFO(),
+                        isFile: stat.isFile(),
+                        isDirectory: stat.isDirectory(),
+                        isSocket: stat.isSocket(),
+                        isSymbolicLink: stat.isSymbolicLink(),
+                    };
+                });
 
-                    return items;
-                } catch (e) {
-                    return [];
-                }
+                return items;
             }
             case 'move': {
                 const {
@@ -138,7 +134,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     chunkSize,
                     sender: async ({ index, chunkCount, chunkContent, md5 }) => {
                         try {
-                            await this.sdkService.pushChannelGateway({
+                            await this.clientManagerService.pushChannelGateway({
                                 eventId: 'file:download:processing',
                                 data: {
                                     index,
@@ -158,7 +154,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     },
                     onError: async (error) => {
                         try {
-                            await this.sdkService.pushChannelGateway({
+                            await this.clientManagerService.pushChannelGateway({
                                 eventId: 'file:download:errored',
                                 data: {
                                     fileId: id,
@@ -175,7 +171,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
 
                         if (total === succeeded) {
                             try {
-                                await this.sdkService.pushChannelGateway({
+                                await this.clientManagerService.pushChannelGateway({
                                     eventId: 'file:download:finished',
                                     data: {
                                         fileId: id,

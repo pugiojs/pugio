@@ -4,34 +4,39 @@ import {
     ClientOptions,
 } from '../client';
 
-export type SDKErrorHandler = (error: Error) => void;
-
-export interface SDKOptions {
-    clientKey?: string;
+export interface SDKManagerBaseOptions {
     hostname?: string;
     apiVersion?: number;
     onMessage?: ClientMessageHandler;
-    onError?: SDKErrorHandler;
+    onError?: ErrorHandler;
 }
 
-export type SDKResponse<T> = Promise<SDKResponseData<T>>;
+export interface SDKManagerOptions extends SDKManagerBaseOptions {
+    headers?: Record<string, string>;
+}
 
-export interface SDKError {
+export type ErrorHandler = (error: Error) => void;
+export interface SDKManagerError {
     statusCode: number;
     message: string;
 }
-
-export interface SDKResponseData<T> {
+export interface SDKManagerResponseData<T> {
     response?: T;
-    error?: SDKError;
+    error?: SDKManagerError;
 }
 
-export interface SDKResponseBaseUnit {
+export interface ClientManagerOptions extends SDKManagerBaseOptions {
+    clientKey?: string;
+}
+
+export type ClientManagerResponse<T> = Promise<SDKManagerResponseData<T>>;
+
+export interface ClientManagerResponseBaseUnit {
     createdAt?: string;
     updatedAt?: string;
 }
 
-export interface GetClientDetailResponse extends SDKResponseBaseUnit {
+export interface GetClientDetailResponse extends ClientManagerResponseBaseUnit {
     id: string;
     name: string;
     description: string;
@@ -39,7 +44,7 @@ export interface GetClientDetailResponse extends SDKResponseBaseUnit {
     version: string;
 }
 
-export interface GetUserProfileResponse extends SDKResponseBaseUnit {
+export interface GetUserProfileResponse extends ClientManagerResponseBaseUnit {
     id: string;
     openId: string;
     email: string;
@@ -57,7 +62,7 @@ export interface MakeChallengeRequest {
     deviceId: string;
 }
 
-export interface MakeChallengeResponse extends ConnectedResponse, SDKResponseBaseUnit {
+export interface MakeChallengeResponse extends ConnectedResponse, ClientManagerResponseBaseUnit {
     credential: string;
 }
 
@@ -65,7 +70,7 @@ export interface ConnectedRequest {
     credential: string;
 }
 
-export interface ConnectedResponse extends SDKResponseBaseUnit {
+export interface ConnectedResponse extends ClientManagerResponseBaseUnit {
     clientInfo: {
         flags: string[];
         commands: string;
@@ -79,7 +84,7 @@ export interface ConsumeExecutionTaskRequest {
     lockPass?: string;
 }
 
-export type ConsumeExecutionTaskResponse = Array<ExecutionTask & SDKResponseBaseUnit>;
+export type ConsumeExecutionTaskResponse = Array<ExecutionTask & ClientManagerResponseBaseUnit>;
 
 export interface PushExecutionRecordRequest {
     taskId: string;
@@ -88,7 +93,7 @@ export interface PushExecutionRecordRequest {
     content?: string;
 }
 
-export interface PushExecutionRecordResponse extends SDKResponseBaseUnit {
+export interface PushExecutionRecordResponse extends ClientManagerResponseBaseUnit {
     id: string;
 }
 
@@ -107,7 +112,7 @@ export interface ReportClientStatusRequest {
     cipher: string;
 }
 
-export interface ReportClientStatusResponse extends SDKResponseBaseUnit {
+export interface ReportClientStatusResponse extends ClientManagerResponseBaseUnit {
     id: string;
     status: number;
     client: GetClientDetailResponse;
@@ -119,7 +124,7 @@ export interface PushChannelGatewayRequest<T> {
     data: T;
 }
 
-export interface PushChannelGatewayResponse extends SDKResponseBaseUnit {
+export interface PushChannelGatewayResponse extends ClientManagerResponseBaseUnit {
     accepted: boolean;
 }
 
@@ -127,7 +132,7 @@ export interface GetChannelDetailRequest {
     channelId: string
 }
 
-export interface GetChannelDetailResponse extends SDKResponseBaseUnit {
+export interface GetChannelDetailResponse extends ClientManagerResponseBaseUnit {
     id: string;
     name: string;
     description: string;
@@ -142,7 +147,7 @@ export interface GetChannelClientRelationRequest {
     clientId: string;
 }
 
-export interface GetChannelClientRelationResponse extends SDKResponseBaseUnit {
+export interface GetChannelClientRelationResponse extends ClientManagerResponseBaseUnit {
     id: string;
     client: GetClientDetailResponse;
     channel: GetChannelDetailResponse;
@@ -153,7 +158,7 @@ export interface AddChannelToClientRequest {
     clientId: string;
 }
 
-export interface AddChannelToClientResponse extends SDKResponseBaseUnit {
+export interface AddChannelToClientResponse extends ClientManagerResponseBaseUnit {
     id: string;
 }
 
@@ -162,7 +167,7 @@ export interface RemoveChannelFromClientRequest {
     clientId: string;
 }
 
-export interface RemoveChannelFromClientResponse extends SDKResponseBaseUnit {
+export interface RemoveChannelFromClientResponse extends ClientManagerResponseBaseUnit {
     id: string;
 }
 
@@ -184,4 +189,22 @@ export interface ChannelOptions<H> {
     clientConfig: ChannelClientConfig;
     channelRequestHandlers?: H[];
     messageHandler: ClientMessageHandler;
+}
+
+export interface ChannelManagerOptions extends SDKManagerBaseOptions {
+    channelId?: string;
+    channelKey?: string;
+}
+
+export type ChannelManagerResponse<T> = Promise<SDKManagerResponseData<T>>;
+
+export interface MakeChannelRequestRequest<T = any> {
+    clientId: string;
+    data?: T;
+}
+
+export interface MakeChannelRequestResponse<T = any> {
+    requestId: string;
+    errored: boolean;
+    data: T;
 }

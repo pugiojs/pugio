@@ -4,6 +4,8 @@ import { RequestService } from '@pugio/request';
 import {
     AddChannelToClientRequest,
     AddChannelToClientResponse,
+    ClientManagerOptions,
+    ClientManagerResponse,
     ConnectedRequest,
     ConnectedResponse,
     ConsumeExecutionTaskRequest,
@@ -25,79 +27,36 @@ import {
     RemoveChannelFromClientResponse,
     ReportClientStatusRequest,
     ReportClientStatusResponse,
-    SDKOptions,
-    SDKResponse,
 } from '@pugio/types';
 import _ from 'lodash';
 import { UtilsService } from '@pugio/utils';
+import { AbstractManagerService } from './manager.abstract';
 
 @Service()
-export class SDKService {
-    protected options: SDKOptions;
+export class ClientManagerService extends AbstractManagerService implements AbstractManagerService {
+    protected options: ClientManagerOptions;
 
-    public constructor(
-        private readonly requestService: RequestService,
-        private readonly utilsService: UtilsService,
-    ) {}
+    public constructor(requestService: RequestService, utilsService: UtilsService) {
+        super(requestService, utilsService);
+    }
 
-    public initialize(options: SDKOptions = {}) {
+    public initialize(options: ClientManagerOptions = {}) {
         this.options = options;
 
         const {
             clientKey,
-            hostname = 'pugio.lenconda.top',
-            apiVersion = 1,
-            onMessage: messageHandler,
-            onError: errorHandler,
+            ...otherOptions
         } = this.options;
 
-        this.requestService.initialize(
-            {
-                clientKey,
-                transformCase: true,
-                requestConfig: {
-                    baseURL: `https://${hostname}/api/v${apiVersion}`,
-                },
-                messageHandler: _.isFunction(messageHandler) ? messageHandler : _.noop,
+        super.initialize.call(this, {
+            ...otherOptions,
+            headers: {
+                'CLIENT-KEY': clientKey,
             },
-            (instance) => {
-                const defaultRequestTransformers = instance.defaults.transformRequest || [];
-
-                instance.defaults.transformRequest = [
-                    (data) => {
-                        return this.utilsService.transformDTOToDAO(data);
-                    },
-                    ...(
-                        _.isArray(defaultRequestTransformers)
-                            ? defaultRequestTransformers
-                            : [defaultRequestTransformers]
-                    ),
-                ];
-
-                instance.interceptors.response.use((response) => {
-                    const responseStatus = response.status;
-                    const responseContent = response.data || response;
-                    const data = {
-                        response: null,
-                        error: null,
-                    };
-
-                    if (responseStatus >= 300) {
-                        data.error = responseContent;
-                        if (_.isFunction(errorHandler)) {
-                            errorHandler(new Error(responseContent.message));
-                        }
-                    } else {
-                        data.response = responseContent;
-                    }
-
-                    return data;
-                });
-            },
-        );
+        });
     }
 
-    public async makeChallenge(options: MakeChallengeRequest): SDKResponse<MakeChallengeResponse> {
+    public async makeChallenge(options: MakeChallengeRequest): ClientManagerResponse<MakeChallengeResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -107,7 +66,7 @@ export class SDKService {
             });
     }
 
-    public async connected(options: ConnectedRequest): SDKResponse<ConnectedResponse> {
+    public async connected(options: ConnectedRequest): ClientManagerResponse<ConnectedResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -117,7 +76,7 @@ export class SDKService {
             });
     }
 
-    public async consumeExecutionTask(options: ConsumeExecutionTaskRequest = {}): SDKResponse<ConsumeExecutionTaskResponse> {
+    public async consumeExecutionTask(options: ConsumeExecutionTaskRequest = {}): ClientManagerResponse<ConsumeExecutionTaskResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -127,7 +86,7 @@ export class SDKService {
             });
     }
 
-    public async pushExecutionRecord(options: PushExecutionRecordRequest): SDKResponse<PushExecutionRecordResponse> {
+    public async pushExecutionRecord(options: PushExecutionRecordRequest): ClientManagerResponse<PushExecutionRecordResponse> {
         const {
             taskId,
             ...data
@@ -142,7 +101,7 @@ export class SDKService {
             });
     }
 
-    public async pushChannelResponse(options: PushChannelResponseRequest): SDKResponse<PushChannelResponseResponse> {
+    public async pushChannelResponse(options: PushChannelResponseRequest): ClientManagerResponse<PushChannelResponseResponse> {
         const {
             requestId,
             data,
@@ -161,7 +120,7 @@ export class SDKService {
             });
     }
 
-    public async reportClientStatus(options: ReportClientStatusRequest): SDKResponse<ReportClientStatusResponse> {
+    public async reportClientStatus(options: ReportClientStatusRequest): ClientManagerResponse<ReportClientStatusResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -171,7 +130,7 @@ export class SDKService {
             });
     }
 
-    public async pushChannelGateway<T>(options: PushChannelGatewayRequest<T>): SDKResponse<PushChannelGatewayResponse> {
+    public async pushChannelGateway<T>(options: PushChannelGatewayRequest<T>): ClientManagerResponse<PushChannelGatewayResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -181,7 +140,7 @@ export class SDKService {
             });
     }
 
-    public async getClientDetail(): SDKResponse<GetClientDetailResponse> {
+    public async getClientDetail(): ClientManagerResponse<GetClientDetailResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -190,7 +149,7 @@ export class SDKService {
             });
     }
 
-    public async getChannelDetail(options: GetChannelDetailRequest): SDKResponse<GetChannelDetailResponse> {
+    public async getChannelDetail(options: GetChannelDetailRequest): ClientManagerResponse<GetChannelDetailResponse> {
         return await this.requestService
             .getInstance()
             .request({
@@ -199,7 +158,7 @@ export class SDKService {
             });
     }
 
-    public async getChannelClientRelation(options: GetChannelClientRelationRequest): SDKResponse<GetChannelClientRelationResponse> {
+    public async getChannelClientRelation(options: GetChannelClientRelationRequest): ClientManagerResponse<GetChannelClientRelationResponse> {
         const { channelId, clientId } = options;
 
         return await this.requestService
@@ -211,7 +170,7 @@ export class SDKService {
             });
     }
 
-    public async addChannelToClient(options: AddChannelToClientRequest): SDKResponse<AddChannelToClientResponse> {
+    public async addChannelToClient(options: AddChannelToClientRequest): ClientManagerResponse<AddChannelToClientResponse> {
         const { channelId, clientId } = options;
 
         return await this.requestService
@@ -223,7 +182,7 @@ export class SDKService {
             });
     }
 
-    public async removeChannelFromClient(options: RemoveChannelFromClientRequest): SDKResponse<RemoveChannelFromClientResponse> {
+    public async removeChannelFromClient(options: RemoveChannelFromClientRequest): ClientManagerResponse<RemoveChannelFromClientResponse> {
         const { channelId, clientId } = options;
 
         return await this.requestService
@@ -233,5 +192,16 @@ export class SDKService {
                 url: `/channel/${channelId}/client`,
                 data: { clientId },
             });
+    }
+}
+
+export class ClientManager extends ClientManagerService {
+    public constructor(options: ClientManagerOptions = {}) {
+        super(
+            new RequestService(),
+            new UtilsService(),
+        );
+
+        this.initialize(options);
     }
 }

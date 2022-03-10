@@ -49,7 +49,7 @@ export class RequestService {
     private transformCase: boolean;
 
     public constructor(
-        private readonly utilsService: UtilsService,
+        private readonly utilsService: UtilsService = new UtilsService(),
     ) {}
 
     public initialize(
@@ -57,7 +57,7 @@ export class RequestService {
         instanceModifier?: (instance: Request) => void,
     ) {
         const {
-            clientKey = '',
+            headers = {},
             requestConfig = {},
             json = true,
             transformCase = false,
@@ -93,8 +93,8 @@ export class RequestService {
         this.instance.interceptors.request.use((config) => {
             return _.merge(config, {
                 headers: {
-                    'CLIENT-KEY': clientKey,
                     'Content-Type': 'application/json',
+                    ...headers,
                 },
             });
         });
@@ -121,7 +121,12 @@ export class RequestService {
     }
 
     public getInstance(options: ResponseGetInstanceOptions = {}) {
-        const { json: getInstanceJson = this.json } = options;
+        const {
+            json: getInstanceJson = this.json,
+            ...otherOptions
+        } = options;
+
+        const axiosOptions = otherOptions || {};
         const currentInstance = _.cloneDeep(this.instance);
 
         if (getInstanceJson) {
@@ -168,6 +173,12 @@ export class RequestService {
                         : []
                 ),
             ];
+        }
+
+        if (Object.keys(axiosOptions).length > 0) {
+            Object.keys(axiosOptions).forEach((key) => {
+                currentInstance.defaults[key] = axiosOptions[key];
+            });
         }
 
         return currentInstance;
