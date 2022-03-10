@@ -201,7 +201,7 @@ export type ChannelManagerResponse<T> = Promise<SDKManagerResponseData<T>>;
 export interface MakeChannelRequestRequest<T = any> {
     channelId: string;
     clientId: string;
-    data: T;
+    data?: T;
 }
 
 export interface MakeChannelRequestResponse<T = any> {
