@@ -1,7 +1,15 @@
-export interface PipelinesRequestData {
+export interface PipelinesTriggerRequestData {
     lockPass: string;
 }
 
-export interface PipelineResponseData {
+export type PipelinesUnionRequestData = PipelinesTriggerRequestData;
+
+export type PipelinesRequestData = PipelinesUnionRequestData & {
+    action: string;
+};
+
+export interface PipelinesTriggerResponseData {
     done: boolean;
 }
+
+export type PipelinesResponseData = PipelinesTriggerResponseData;

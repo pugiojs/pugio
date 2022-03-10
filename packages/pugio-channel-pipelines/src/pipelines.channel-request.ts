@@ -1,8 +1,10 @@
 import { AbstractChannelRequest } from '@pugio/sdk';
 import {
     PipelinesRequestData,
-    PipelineResponseData,
     ExecutionTask,
+    PipelinesTriggerRequestData,
+    PipelinesResponseData,
+    PipelinesTriggerResponseData,
 } from '@pugio/types';
 import { ExecutionService } from '@pugio/execution';
 import { UtilsService } from '@pugio/utils';
@@ -35,28 +37,43 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
         });
     }
 
-    public async handleRequest(data: PipelinesRequestData): Promise<PipelineResponseData> {
-        const { lockPass } = data;
+    public async handleRequest(data: PipelinesRequestData): Promise<PipelinesResponseData> {
+        const {
+            action,
+            ...requestBody
+        } = data;
 
-        this.log({
-            level: 'info',
-            data: `Received task with lock: ${lockPass}`,
-        });
+        switch (action) {
+            case 'trigger': {
+                const { lockPass } = requestBody as PipelinesTriggerRequestData;
 
-        const { response: executionTasks } = await this.clientManagerService.consumeExecutionTask({
-            lockPass,
-        });
+                this.log({
+                    level: 'info',
+                    data: `Received task with lock: ${lockPass}`,
+                });
 
-        if (executionTasks && executionTasks.length > 0) {
-            this.log({
-                level: 'info',
-                data: `Got ${executionTasks.length} task(s)`,
-            });
+                const { response: executionTasks } = await this.clientManagerService.consumeExecutionTask({
+                    lockPass,
+                });
 
-            await this.executeTasks(executionTasks);
+                if (executionTasks && executionTasks.length > 0) {
+                    this.log({
+                        level: 'info',
+                        data: `Got ${executionTasks.length} task(s)`,
+                    });
+
+                    await this.executeTasks(executionTasks);
+                }
+
+                return { done: true } as PipelinesTriggerResponseData;
+            }
+            // TODO remove
+            case 'test': {
+                return { requestBody } as any;
+            }
+            default:
+                return null;
         }
-
-        return { done: true };
     }
 
     private async executeTasks(executionTasks: ExecutionTask[]) {
