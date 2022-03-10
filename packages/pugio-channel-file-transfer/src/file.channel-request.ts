@@ -44,7 +44,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     !fs.existsSync(pathname) ||
                     !fs.statSync(pathname).isDirectory()
                 ) {
-                    return null;
+                    throw new Error();
                 }
 
                 try {
@@ -54,7 +54,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     });
 
                     const items = dirItems.map((dirItem) => {
-                        const stat = fs.statSync(path.resolve());
+                        const stat = fs.statSync(path.resolve(pathname, dirItem.name));
                         return {
                             ...stat,
                             name: dirItem.name,
