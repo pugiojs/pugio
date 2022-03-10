@@ -47,29 +47,25 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                     throw new Error();
                 }
 
-                try {
-                    const dirItems = fs.readdirSync(pathname, {
-                        withFileTypes: true,
-                        encoding: 'utf-8',
-                    });
+                const dirItems = fs.readdirSync(pathname, {
+                    withFileTypes: true,
+                    encoding: 'utf-8',
+                });
 
-                    const items = dirItems.map((dirItem) => {
-                        const stat = fs.statSync(path.resolve(pathname, dirItem.name));
-                        return {
-                            ...stat,
-                            name: dirItem.name,
-                            isFIFO: stat.isFIFO(),
-                            isFile: stat.isFile(),
-                            isDirectory: stat.isDirectory(),
-                            isSocket: stat.isSocket(),
-                            isSymbolicLink: stat.isSymbolicLink(),
-                        };
-                    });
+                const items = dirItems.map((dirItem) => {
+                    const stat = fs.statSync(path.resolve(pathname, dirItem.name));
+                    return {
+                        ...stat,
+                        name: dirItem.name,
+                        isFIFO: stat.isFIFO(),
+                        isFile: stat.isFile(),
+                        isDirectory: stat.isDirectory(),
+                        isSocket: stat.isSocket(),
+                        isSymbolicLink: stat.isSymbolicLink(),
+                    };
+                });
 
-                    return items;
-                } catch (e) {
-                    return [];
-                }
+                return items;
             }
             case 'move': {
                 const {
