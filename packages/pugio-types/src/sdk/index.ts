@@ -199,7 +199,6 @@ export interface ChannelManagerOptions extends SDKManagerBaseOptions {
 export type ChannelManagerResponse<T> = Promise<SDKManagerResponseData<T>>;
 
 export interface MakeChannelRequestRequest<T = any> {
-    channelId: string;
     clientId: string;
     data?: T;
 }

@@ -44,7 +44,6 @@ export class ChannelManagerService extends AbstractManagerService implements Abs
     ): ChannelManagerResponse<MakeChannelRequestResponse<Response>> {
         const {
             clientId,
-            channelId: scope,
             data = {},
         } = options;
 
@@ -54,7 +53,6 @@ export class ChannelManagerService extends AbstractManagerService implements Abs
                 method: 'post',
                 url: `/channel/${clientId}/channel_request`,
                 data: {
-                    scope,
                     data,
                 },
             });
