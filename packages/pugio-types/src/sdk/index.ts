@@ -1,4 +1,4 @@
-import { ExecutionTask } from '../execution';
+import { Method } from 'axios';
 import {
     ClientMessageHandler,
     ClientOptions,
@@ -79,24 +79,6 @@ export interface ConnectedResponse extends ClientManagerResponseBaseUnit {
     };
 }
 
-export interface ConsumeExecutionTaskRequest {
-    all?: number;
-    lockPass?: string;
-}
-
-export type ConsumeExecutionTaskResponse = Array<ExecutionTask & ClientManagerResponseBaseUnit>;
-
-export interface PushExecutionRecordRequest {
-    taskId: string;
-    sequence?: number;
-    status?: number;
-    content?: string;
-}
-
-export interface PushExecutionRecordResponse extends ClientManagerResponseBaseUnit {
-    id: string;
-}
-
 export interface PushChannelResponseRequest {
     requestId: string;
     data?: any;
@@ -170,6 +152,16 @@ export interface RemoveChannelFromClientRequest {
 export interface RemoveChannelFromClientResponse extends ClientManagerResponseBaseUnit {
     id: string;
 }
+
+export interface RequestChannelAPIRequest {
+    channelId?: string;
+    pathname?: string;
+    method?: Method;
+    data?: Record<string, any>;
+    query?: Record<string, any>;
+}
+
+export type RequestChannelAPIResponse<T = any> = T;
 
 export interface ChannelRequest<T> {
     id: string;

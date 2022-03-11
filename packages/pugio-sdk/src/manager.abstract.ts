@@ -43,7 +43,7 @@ export abstract class AbstractManagerService {
 
                 instance.interceptors.response.use((response) => {
                     const responseStatus = response.status;
-                    const responseContent = response.data || response;
+                    const responseContent = response.data;
                     const data = {
                         response: null,
                         error: null,

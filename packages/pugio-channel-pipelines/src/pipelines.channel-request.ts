@@ -5,6 +5,10 @@ import {
     PipelinesTriggerRequestData,
     PipelinesResponseData,
     PipelinesTriggerResponseData,
+    ConsumeExecutionTaskRequest,
+    PushExecutionRecordRequest,
+    ConsumeExecutionTaskResponse,
+    PushExecutionRecordResponse,
 } from '@pugio/types';
 import { ExecutionService } from '@pugio/execution';
 import { UtilsService } from '@pugio/utils';
@@ -28,6 +32,12 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
                             sequence,
                         },
                     });
+                    await this.pushExecutionRecord({
+                        taskId,
+                        sequence,
+                        status,
+                        content,
+                    });
                     this.log({
                         level: 'info',
                         data: `Push execution record of task ${taskId}, sequence: ${sequence}, status: ${status}`,
@@ -45,14 +55,14 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
 
         switch (action) {
             case 'trigger': {
-                const { lockPass } = requestBody as PipelinesTriggerRequestData;
+                const { lock_pass: lockPass } = requestBody as PipelinesTriggerRequestData;
 
                 this.log({
                     level: 'info',
                     data: `Received task with lock: ${lockPass}`,
                 });
 
-                const { response: executionTasks } = await this.clientManagerService.consumeExecutionTask({
+                const { response: executionTasks } = await this.consumeExecutionTask({
                     lockPass,
                 });
 
@@ -86,7 +96,7 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
     private async clearExecutionTaskQueue() {
         const {
             response: remainedExecutionTasks,
-        } = await this.clientManagerService.consumeExecutionTask({
+        } = await this.consumeExecutionTask({
             all: 1,
         });
 
@@ -98,5 +108,28 @@ export class PipelinesChannelRequest extends AbstractChannelRequest implements A
 
             await this.executeTasks(remainedExecutionTasks);
         }
+    }
+
+    private async consumeExecutionTask(options: ConsumeExecutionTaskRequest = {}) {
+        return await this.clientManagerService.requestChannelApi<ConsumeExecutionTaskResponse>({
+            method: 'get',
+            channelId: this.scope,
+            pathname: '/task/consume',
+            query: options,
+        });
+    }
+
+    private async pushExecutionRecord(options: PushExecutionRecordRequest) {
+        const {
+            taskId,
+            ...data
+        } = options;
+
+        return await this.clientManagerService.requestChannelApi<PushExecutionRecordResponse>({
+            method: 'post',
+            channelId: this.scope,
+            pathname: `/task/${taskId}/execution`,
+            data,
+        });
     }
 }

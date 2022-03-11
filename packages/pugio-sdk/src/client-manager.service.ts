@@ -8,8 +8,6 @@ import {
     ClientManagerResponse,
     ConnectedRequest,
     ConnectedResponse,
-    ConsumeExecutionTaskRequest,
-    ConsumeExecutionTaskResponse,
     GetChannelClientRelationRequest,
     GetChannelClientRelationResponse,
     GetChannelDetailRequest,
@@ -21,14 +19,15 @@ import {
     PushChannelGatewayResponse,
     PushChannelResponseRequest,
     PushChannelResponseResponse,
-    PushExecutionRecordRequest,
-    PushExecutionRecordResponse,
     RemoveChannelFromClientRequest,
     RemoveChannelFromClientResponse,
     ReportClientStatusRequest,
     ReportClientStatusResponse,
+    RequestChannelAPIRequest,
+    RequestChannelAPIResponse,
+    SDKManagerResponseData,
 } from '@pugio/types';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { UtilsService } from '@pugio/utils';
 import { AbstractManagerService } from './manager.abstract';
 
@@ -73,31 +72,6 @@ export class ClientManagerService extends AbstractManagerService implements Abst
                 method: 'post',
                 url: '/client/connected',
                 data: options,
-            });
-    }
-
-    public async consumeExecutionTask(options: ConsumeExecutionTaskRequest = {}): ClientManagerResponse<ConsumeExecutionTaskResponse> {
-        return await this.requestService
-            .getInstance()
-            .request({
-                method: 'get',
-                url: '/task/consume',
-                query: options,
-            });
-    }
-
-    public async pushExecutionRecord(options: PushExecutionRecordRequest): ClientManagerResponse<PushExecutionRecordResponse> {
-        const {
-            taskId,
-            ...data
-        } = options;
-
-        return await this.requestService
-            .getInstance()
-            .request({
-                method: 'post',
-                url: `/task/${taskId}/execution`,
-                data,
             });
     }
 
@@ -192,6 +166,32 @@ export class ClientManagerService extends AbstractManagerService implements Abst
                 url: `/channel/${channelId}/client`,
                 data: { clientId },
             });
+    }
+
+    public async requestChannelApi<T = any>(options: RequestChannelAPIRequest): ClientManagerResponse<RequestChannelAPIResponse<T>> {
+        const {
+            channelId,
+            pathname,
+            method,
+            data = {},
+            query = {},
+        } = options;
+
+        const responseData = (await this.requestService.getInstance().request({
+            method: 'post',
+            url: `/channel/${channelId}/api`,
+            data: {
+                pathname,
+                method,
+                data,
+                query,
+            },
+        })) as SDKManagerResponseData<RequestChannelAPIResponse<T>>;
+
+        return {
+            response: _.get(responseData, 'response.response'),
+            error: _.get(responseData, 'response.error') || _.get(responseData, 'error'),
+        };
     }
 }
 
