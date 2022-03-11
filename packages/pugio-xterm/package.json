@@ -1,6 +1,6 @@
 {
     "name": "@pugio/xterm",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "XTerm.js fork by Pugio.js",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -14,9 +14,6 @@
         "README.md",
         "LICENSE"
     ],
-    "publishConfig": {
-        "registry": "https://registry.npmmirror.com/"
-    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/pugiojs/pugio.git"
@@ -31,7 +28,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^2.0.1",
+        "@pugio/types": "^2.0.2",
         "lodash": "^4.17.21",
         "xterm": "^4.17.0"
     },

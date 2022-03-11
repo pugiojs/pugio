@@ -1,6 +1,6 @@
 {
     "name": "@pugio/utils",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "Pugio.js Utilities",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -25,7 +25,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^2.0.1",
+        "@pugio/types": "^2.0.2",
         "axios": "^0.25.0",
         "chalk": "^5.0.0",
         "cli-spinners": "^2.6.1",
