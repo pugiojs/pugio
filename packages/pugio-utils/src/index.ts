@@ -17,7 +17,6 @@ import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import * as spinners from 'cli-spinners';
 import * as readline from 'readline';
-import chalk from 'chalk';
 import {
     ExecOptions,
 } from 'child_process';
@@ -347,13 +346,13 @@ export class UtilsService {
 
         return {
             success: (successText?: string) => {
-                handleLogEnd(chalk.green(successIcon), successText || text);
+                handleLogEnd(successIcon, successText || text);
             },
             warn: (warnText?: string) => {
-                handleLogEnd(chalk.yellow(warnIcon), warnText || text);
+                handleLogEnd(warnIcon, warnText || text);
             },
             error: (errorText?: string) => {
-                handleLogEnd(chalk.red(errorIcon), errorText || text);
+                handleLogEnd(errorIcon, errorText || text);
             },
         };
     }
