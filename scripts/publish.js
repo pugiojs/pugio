@@ -7,6 +7,7 @@ const execSync = require('child_process').execSync;
 
 function publish(pkg, directory) {
     console.log('[PUBLISH] ', pkg);
+    console.log('[PUBLISH] npmrc file exists', fs.existsSync(path.resolve(directory, '.npmrc')));
 
     execSync('npm publish --access public', {
         cwd: directory,

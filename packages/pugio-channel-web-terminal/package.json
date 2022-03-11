@@ -1,6 +1,6 @@
 {
     "name": "@pugio/channel-web-terminal",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Pugio built-in channel",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -27,9 +27,9 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/sdk": "^2.0.0",
-        "@pugio/segmental-transferer": "^2.0.0",
-        "@pugio/types": "^2.0.0",
+        "@pugio/sdk": "^2.0.1",
+        "@pugio/segmental-transferer": "^2.0.1",
+        "@pugio/types": "^2.0.1",
         "node-pty": "^0.10.1",
         "reflect-metadata": "^0.1.13",
         "typedi": "^0.10.0",

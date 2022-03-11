@@ -1,6 +1,6 @@
 {
     "name": "@pugio/xterm",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "XTerm.js fork by Pugio.js",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -31,7 +31,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^2.0.0",
+        "@pugio/types": "^2.0.1",
         "lodash": "^4.17.21",
         "xterm": "^4.17.0"
     },
