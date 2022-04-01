@@ -4,7 +4,16 @@
         "baseUrl": "./",
         "paths": {
             "@pugio/*": ["packages/*/src"]
-        }
+        },
+        "lib": [
+            "es5",
+            "dom",
+            "DOM.Iterable",
+            "esnext",
+            "es2017",
+            "es2015",
+            "es2016"
+        ]
     },
     "exclude": [
         "packages/**/*.js",

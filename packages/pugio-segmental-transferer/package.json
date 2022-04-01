@@ -1,6 +1,6 @@
 {
     "name": "@pugio/segmental-transferer",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "Transfer large files by segments",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -28,7 +28,7 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^2.0.3",
+        "@pugio/types": "^2.0.4",
         "js-base64": "^3.7.2",
         "lodash": "^4.17.21",
         "spark-md5": "^3.0.2"

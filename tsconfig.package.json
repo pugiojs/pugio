@@ -20,6 +20,7 @@
         "lib": [
             "es5",
             "dom",
+            "DOM.Iterable",
             "esnext",
             "es2017",
             "es2015",

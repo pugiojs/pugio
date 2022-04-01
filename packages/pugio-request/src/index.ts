@@ -9,20 +9,18 @@ import {
     RequestOptions,
     ResponseGetInstanceOptions,
 } from '@pugio/types';
-import {
-    UtilsService,
-} from '@pugio/utils';
+import { CaseTransformerService } from '@pugio/case-transformer';
 import * as _ from 'lodash';
 import * as querystring from 'querystring';
 
-const utilsService = Container.get(UtilsService);
+const caseTransformerService = Container.get<CaseTransformerService>(CaseTransformerService);
 
 export class Request extends Axios {
     public request<T = any, R = AxiosResponse<T>, D = any>(config: RequestConfig<D> = {}): Promise<R> {
         const { query = {}, url = '' } = config;
-        config.query = utilsService.transformDTOToDAO(query);
+        config.query = caseTransformerService.transformDTOToDAO(query);
         const [pathname, urlSearch = ''] = url.split('?');
-        const urlSearchParams = utilsService.transformURLSearchParamsToObject(new URLSearchParams(urlSearch));
+        const urlSearchParams = caseTransformerService.transformURLSearchParamsToObject(new URLSearchParams(urlSearch));
 
         const queryObject = {
             ...urlSearchParams,
@@ -32,7 +30,7 @@ export class Request extends Axios {
         const newUrl = pathname +
             (
                 Object.keys(queryObject).length > 0
-                    ? `?${querystring.stringify(utilsService.transformDTOToDAO(queryObject))}`
+                    ? `?${querystring.stringify(caseTransformerService.transformDTOToDAO(queryObject))}`
                     : ''
             );
 
@@ -49,7 +47,7 @@ export class RequestService {
     private transformCase: boolean;
 
     public constructor(
-        private readonly utilsService: UtilsService = new UtilsService(),
+        private readonly caseTransformerService: CaseTransformerService = new CaseTransformerService(),
     ) {}
 
     public initialize(
@@ -150,7 +148,7 @@ export class RequestService {
                     this.transformCase
                         ? [
                             (data) => {
-                                return this.utilsService.transformDAOToDTO(data);
+                                return this.caseTransformerService.transformDAOToDTO(data);
                             },
                         ]
                         : []
@@ -167,7 +165,7 @@ export class RequestService {
                     this.transformCase
                         ? [
                             (data) => {
-                                return this.utilsService.transformDTOToDAO(data);
+                                return this.caseTransformerService.transformDTOToDAO(data);
                             },
                         ]
                         : []
