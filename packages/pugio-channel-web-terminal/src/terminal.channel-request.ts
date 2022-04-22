@@ -42,6 +42,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
         cols: 120,
         rows: 80,
         cwd: os.homedir(),
+        encoding: 'utf8',
     };
 
     private defaultTerminalConfig: TerminalChannelConfig = {
@@ -97,7 +98,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         ptyProcess = pty.spawn(
                             shell,
                             args,
-                            _.merge(this.defaultPtyForkOptions, ptyForkOptions),
+                            _.merge(_.cloneDeep(this.defaultPtyForkOptions), ptyForkOptions),
                         );
                     }
 
@@ -113,7 +114,9 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     const listeners = this.ptyListenersMap.get(id);
 
                     const dataListener = ptyProcess.onData(async (data) => {
-                        const content = Buffer.from(data).toString('base64');
+                        const content = Buffer.from(
+                            encodeURI(Buffer.from(data).toString('utf-8')),
+                        ).toString('base64');
                         const sequence = this.ptySendSequenceMap.get(id);
                         this.ptySendSequenceMap.set(id, sequence + 1);
                         this.renewPtyKiller(id);
@@ -186,7 +189,9 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
                                 if (ptyData) {
                                     this.ptyContentMap.get(id).push(ptyData);
-                                    ptyProcess.write(Buffer.from(ptyData, 'base64').toString());
+                                    ptyProcess.write(
+                                        decodeURI(Buffer.from(ptyData, 'base64').toString()),
+                                    );
                                 } else {
                                     accepted = false;
                                 }
