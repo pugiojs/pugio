@@ -1,6 +1,6 @@
 {
     "name": "@pugio/builtins",
-    "version": "2.0.6",
+    "version": "2.0.7",
     "description": "Pugio built-ins",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -25,6 +25,6 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/types": "^2.0.6"
+        "@pugio/types": "^2.0.7"
     }
 }

@@ -32,11 +32,17 @@ export interface TerminalChannelResizeRequestData extends TerminalChannelRequest
     cols?: number;
 }
 
+export interface TerminalChannelConsumeConfirmRequestData extends TerminalChannelRequestBaseData {
+    id: string;
+    sequence: number;
+}
+
 export type TerminalChannelRequestData = TerminalChannelHandshakeRequestData
     | TerminalChannelConnectRequestData
     | TerminalChannelDataRequestData
     | TerminalChannelCloseRequestData
-    | TerminalChannelResizeRequestData;
+    | TerminalChannelResizeRequestData
+    | TerminalChannelConsumeConfirmRequestData;
 
 export interface TerminalChannelHandshakeResponseData {
     id: string;
@@ -51,10 +57,12 @@ export interface TerminalChannelConnectResponseData {
 export type TerminalChannelDataResponseData = Omit<TerminalChannelConnectResponseData, 'content'>;
 export type TerminalChannelCloseResponseData = TerminalChannelDataResponseData;
 export type TerminalChannelResizeResponseData = TerminalChannelDataResponseData;
+export type TerminalChannelConsumeConfirmResponseData = TerminalChannelDataResponseData;
 
 export type TerminalChannelResponseData = TerminalChannelHandshakeResponseData
     | TerminalChannelConnectResponseData
     | TerminalChannelDataResponseData
-    | TerminalChannelCloseResponseData;
+    | TerminalChannelCloseResponseData
+    | TerminalChannelConsumeConfirmResponseData;
 
 export type TerminalStatus = 'running' | 'destroyed' | 'waiting';

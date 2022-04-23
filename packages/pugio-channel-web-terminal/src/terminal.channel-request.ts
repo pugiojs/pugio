@@ -5,6 +5,8 @@ import {
     TerminalChannelConfig,
     TerminalChannelConnectRequestData,
     TerminalChannelConnectResponseData,
+    TerminalChannelConsumeConfirmRequestData,
+    TerminalChannelConsumeConfirmResponseData,
     TerminalChannelDataRequestData,
     TerminalChannelDataResponseData,
     TerminalChannelHandshakeResponseData,
@@ -37,6 +39,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     protected ptySendSequenceMap = new Map<string, number>();
     protected ptyWriteSequenceMap = new Map<string, number>();
     protected ptyListenersMap = new Map<string, IDisposable[]>();
+    protected consumeMap = new Map<string, Set<number>>();
 
     private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
         cols: 120,
@@ -118,18 +121,25 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                             encodeURI(Buffer.from(data).toString('utf-8')),
                         ).toString('base64');
                         const sequence = this.ptySendSequenceMap.get(id);
-                        this.ptySendSequenceMap.set(id, sequence + 1);
+                        const currentSequence = sequence + 1;
+                        this.ptySendSequenceMap.set(id, currentSequence);
                         this.renewPtyKiller(id);
 
                         ptyContent.push(content);
 
-                        await this.clientManagerService.pushChannelGateway({
-                            eventId: `terminal:${id}:data`,
-                            data: {
-                                content,
-                                sequence: sequence + 1,
-                            },
-                        });
+                        const pushChannelInterval = setInterval(() => {
+                            this.clientManagerService.pushChannelGateway({
+                                eventId: `terminal:${id}:data`,
+                                data: {
+                                    content,
+                                    sequence: currentSequence,
+                                },
+                            });
+
+                            if (!currentSequence || this.consumeMap.get(id)?.has(currentSequence)) {
+                                clearInterval(pushChannelInterval);
+                            }
+                        }, 1000);
                     });
 
                     const closeListener = ptyProcess.onExit(async (data) => {
@@ -213,6 +223,30 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     }
                 });
             }
+            case 'consumeConfirm': {
+                try {
+                    const {
+                        id,
+                        sequence,
+                    } = data as TerminalChannelConsumeConfirmRequestData;
+
+                    if (!this.consumeMap.get(id)) {
+                        this.consumeMap.set(id, new Set<number>());
+                    }
+
+                    this.consumeMap.get(id).add(sequence);
+
+                    return {
+                        accepted: true,
+                        error: null,
+                    } as TerminalChannelConsumeConfirmResponseData;
+                } catch (e) {
+                    return {
+                        accepted: false,
+                        error: e.message || e.toString(),
+                    } as TerminalChannelConsumeConfirmResponseData;
+                }
+            }
             case 'resize': {
                 try {
                     const {
@@ -243,7 +277,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     return result;
                 } catch (e) {
                     return {
-                        accepted: true,
+                        accepted: false,
                         error: e.message || e.toString(),
                     } as TerminalChannelResizeResponseData;
                 }
