@@ -16,11 +16,13 @@ export class Terminal<T extends Record<string, any>> extends XTermTerminal {
     private sendSequence = 0;
     private writeSequence = 0;
     private initializingContent = true;
+    private listener: <T = any, U = any>(arg1: T, arg2: U) => any = null;
 
     public constructor(options?: ITerminalOptions) {
         super(options);
 
-        this.onSequenceData = <T, U>(listener: (arg1: T, arg2: U) => any) => {
+        this.onSequenceData = <T = any, U = any>(listener: (arg1, arg2) => any) => {
+            this.listener = listener;
             return this.onData.call(this, async (arg1, arg2) => {
                 return await this.handleSequenceData(arg1, arg2, listener);
             });
@@ -66,6 +68,16 @@ export class Terminal<T extends Record<string, any>> extends XTermTerminal {
                 clearInterval(intervalId);
             }
         }, 0);
+    }
+
+    public async pushSequenceData(content: string | Uint8Array, other?: any) {
+        if (_.isFunction(this.listener)) {
+            this.sendSequence += 1;
+            await this.listener({
+                sequence: this.sendSequence,
+                content,
+            }, other);
+        }
     }
 
     private async handleSequenceData<T, U>(arg1: T, arg2: U, callback: (arg1: T, arg2: U) => any) {
