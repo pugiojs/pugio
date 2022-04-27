@@ -14,6 +14,7 @@ import 'reflect-metadata';
 import { Service } from 'typedi';
 import * as _ from 'lodash';
 import * as yup from 'yup';
+import { UtilsService } from '@pugio/utils';
 
 @Service()
 export class ChannelService {
@@ -25,6 +26,7 @@ export class ChannelService {
 
     public constructor(
         private readonly clientManagerService: ClientManagerService,
+        private readonly utilsService: UtilsService,
     ) {
         this.channelsMap.set('channel_request', (data) => {
             this.messageHandler({
@@ -63,6 +65,10 @@ export class ChannelService {
                 channelRequestHandler.setClientManager(this.clientManagerService);
                 channelRequestHandler.setClientConfig(clientConfig);
                 channelRequestHandler.setLogger(this.messageHandler);
+                channelRequestHandler.setClientKey(this.utilsService.generateClientKey(
+                    this.clientConfig.apiKey,
+                    this.clientConfig.clientId,
+                ));
 
                 this.channelRequestsMap.set(scope, channelRequestHandler);
 

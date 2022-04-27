@@ -173,8 +173,7 @@ export type ChannelClientConfig = Required<Omit<ClientOptions,
     'onMessage' |
     'channelList' |
     'publicKey' |
-    'privateKey' |
-    'apiKey'
+    'privateKey'
 >>;
 
 export interface ChannelOptions<H> {

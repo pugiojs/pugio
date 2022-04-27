@@ -10,6 +10,7 @@ export abstract class AbstractChannelRequest {
     protected clientManagerService: ClientManagerService;
     protected client: ChannelClientConfig;
     protected log: ClientMessageHandler = _.noop;
+    protected clientKey: string;
 
     public constructor(
         public readonly scope: string,
@@ -22,6 +23,10 @@ export abstract class AbstractChannelRequest {
 
     public setClientConfig(config: ChannelClientConfig) {
         this.client = config;
+    }
+
+    public setClientKey(clientKey: string) {
+        this.clientKey = clientKey;
     }
 
     public setLogger(messageHandler: ClientMessageHandler) {

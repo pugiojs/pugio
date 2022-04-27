@@ -146,7 +146,6 @@ export class ClientService {
                             'privateKey',
                             'onMessage',
                             'channelList',
-                            'apiKey',
                         ],
                     ) as ChannelClientConfig,
                     channelRequestHandlers: [

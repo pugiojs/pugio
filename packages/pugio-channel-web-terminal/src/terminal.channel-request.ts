@@ -6,9 +6,7 @@ import {
     TerminalChannelConnectRequestData,
     TerminalChannelConnectResponseData,
     TerminalChannelConsumeConfirmRequestData,
-    TerminalChannelConsumeConfirmResponseData,
     TerminalChannelDataRequestData,
-    TerminalChannelDataResponseData,
     TerminalChannelHandshakeResponseData,
     TerminalChannelRequestData,
     TerminalChannelResizeRequestData,
@@ -29,6 +27,7 @@ import {
     IWindowsPtyForkOptions,
 } from 'node-pty';
 import * as os from 'os';
+import io, { Socket } from 'socket.io-client';
 
 export class TerminalChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
     protected ptyProcessMap = new Map<string, IPty>();
@@ -40,6 +39,9 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     protected ptyWriteSequenceMap = new Map<string, number>();
     protected ptyListenersMap = new Map<string, IDisposable[]>();
     protected consumeMap = new Map<string, Set<number>>();
+    protected socketSendListenersMap = new Map<string, Function>();
+    protected socketConsumeConfirmListenersMap = new Map<string, Function>();
+    private socket: Socket;
 
     private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
         cols: 120,
@@ -54,6 +56,30 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
     public constructor() {
         super('pugio.web-terminal', 'Web Terminal (Built-in)');
+
+        this.socket = io('wss://pugio.lenconda.top/client', {
+            transportOptions: {
+                polling: {
+                    extraHeaders: {
+                        Authorization: 'CK ' + this.clientKey, // 'Bearer h93t4293t49jt34j9rferek...'
+                    },
+                },
+            },
+        });
+
+        this.socket.on('connect', () => {
+            this.log({
+                level: 'info',
+                data: `Socket connected: ${this.socket.id}`,
+            });
+
+            this.socket.emit('join', this.client.clientId);
+
+            this.log({
+                level: 'info',
+                data: `Socket joined channel: '${this.client.clientId}'`,
+            });
+        });
     }
 
     public async handleRequest(data: TerminalChannelRequestData): Promise<TerminalChannelResponseData> {
@@ -95,6 +121,86 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     let ptyProcess = this.ptyProcessMap.get(id);
                     let ptyContent = this.ptyContentMap.get(id);
 
+                    if (!this.socketSendListenersMap.get(id)) {
+                        this.socketSendListenersMap.set(id, (data: TerminalChannelDataRequestData) => {
+                            try {
+                                const {
+                                    data: ptyData = '',
+                                    sequence: dataSequence = 1,
+                                } = data as TerminalChannelDataRequestData;
+
+                                if (!_.isString(id)) {
+                                    throw new Error('Parameter \'id\' must be specified');
+                                }
+
+                                const ptyProcess = this.ptyProcessMap.get(id);
+
+                                if (!ptyProcess) {
+                                    throw new Error(`PTY process ${id} not found`);
+                                }
+
+                                const intervalId = setInterval(() => {
+                                    if (this.ptyWriteSequenceMap.get(id) + 1 === dataSequence) {
+                                        this.renewPtyKiller(id);
+
+                                        let accepted = true;
+
+                                        if (ptyData) {
+                                            this.ptyContentMap.get(id).push(ptyData);
+                                            ptyProcess.write(
+                                                decodeURI(Buffer.from(ptyData, 'base64').toString()),
+                                            );
+                                        } else {
+                                            accepted = false;
+                                        }
+
+                                        this.ptyWriteSequenceMap.set(id, dataSequence);
+                                        clearInterval(intervalId);
+                                        this.log({
+                                            level: 'info',
+                                            data: `Data sent to terminal '${id}' read, accepted: ${accepted}`,
+                                        });
+                                    }
+                                }, 0);
+                            } catch (e) {
+                                this.log({
+                                    level: 'warn',
+                                    data: 'Error consuming data: ' + e.message || e.toString(),
+                                });
+                            }
+                        });
+
+                        this.socket.on(`terminal:${id}:send_data`, this.socketSendListenersMap.get(id));
+                    }
+
+                    if (!this.socketConsumeConfirmListenersMap.get(id)) {
+                        this.socketConsumeConfirmListenersMap.set(id, (data: TerminalChannelConsumeConfirmRequestData) => {
+                            try {
+                                const {
+                                    sequence,
+                                } = data as TerminalChannelConsumeConfirmRequestData;
+
+                                if (!this.consumeMap.get(id)) {
+                                    this.consumeMap.set(id, new Set<number>());
+                                }
+
+                                this.consumeMap.get(id).add(sequence);
+
+                                this.log({
+                                    level: 'info',
+                                    data: `Handshake consumed for terminal '${id}', sequence ${sequence}`,
+                                });
+                            } catch (e) {
+                                this.log({
+                                    level: 'warn',
+                                    data: 'Error confirming: ' + e.message || e.toString(),
+                                });
+                            }
+                        });
+
+                        this.socket.on(`terminal:${id}:consume_confirm_data`, this.socketConsumeConfirmListenersMap.get(id));
+                    }
+
                     if (!ptyProcess) {
                         const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
 
@@ -128,8 +234,9 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         ptyContent.push(content);
 
                         const pushChannelInterval = setInterval(() => {
-                            this.clientManagerService.pushChannelGateway({
-                                eventId: `terminal:${id}:data`,
+                            this.socket.emit('channel_stream', {
+                                eventId: `terminal:${id}:recv_data`,
+                                roomId: this.client.clientId,
                                 data: {
                                     content,
                                     sequence: currentSequence,
@@ -170,81 +277,6 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         content: null,
                         error: e.message || e.toString(),
                     } as TerminalChannelConnectResponseData;
-                }
-            }
-            case 'data': {
-                return new Promise((resolve) => {
-                    try {
-                        const {
-                            id,
-                            data: ptyData = '',
-                            sequence: dataSequence = 1,
-                        } = data as TerminalChannelDataRequestData;
-
-                        if (!_.isString(id)) {
-                            throw new Error('Parameter \'id\' must be specified');
-                        }
-
-                        const ptyProcess = this.ptyProcessMap.get(id);
-
-                        if (!ptyProcess) {
-                            throw new Error(`PTY process ${id} not found`);
-                        }
-
-                        const intervalId = setInterval(() => {
-                            if (this.ptyWriteSequenceMap.get(id) + 1 === dataSequence) {
-                                this.renewPtyKiller(id);
-
-                                let accepted = true;
-
-                                if (ptyData) {
-                                    this.ptyContentMap.get(id).push(ptyData);
-                                    ptyProcess.write(
-                                        decodeURI(Buffer.from(ptyData, 'base64').toString()),
-                                    );
-                                } else {
-                                    accepted = false;
-                                }
-
-                                this.ptyWriteSequenceMap.set(id, dataSequence);
-                                clearInterval(intervalId);
-
-                                resolve({
-                                    accepted,
-                                    error: null,
-                                } as TerminalChannelDataResponseData);
-                            }
-                        }, 0);
-                    } catch (e) {
-                        resolve({
-                            accepted: false,
-                            error: e.message || e.toString(),
-                        } as TerminalChannelDataResponseData);
-                    }
-                });
-            }
-            case 'consumeConfirm': {
-                try {
-                    const {
-                        id,
-                        sequence,
-                    } = data as TerminalChannelConsumeConfirmRequestData;
-
-                    if (!this.consumeMap.get(id)) {
-                        this.consumeMap.set(id, new Set<number>());
-                    }
-
-                    this.consumeMap.get(id).add(sequence);
-
-                    return {
-                        accepted: true,
-                        error: null,
-                    } as TerminalChannelConsumeConfirmResponseData;
-                } catch (e) {
-                    return {
-                        accepted: false,
-                        error: e.message || e.toString(),
-                    } as TerminalChannelConsumeConfirmResponseData;
                 }
             }
             case 'resize': {
@@ -347,6 +379,22 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
         this.ptySendSequenceMap.delete(id);
         this.ptyWriteSequenceMap.delete(id);
+
+        this.consumeMap.delete(id);
+
+        const sendSocketListener = this.socketSendListenersMap.get(id);
+        const consumeConfirmSocketListener = this.socketConsumeConfirmListenersMap.get(id);
+
+        if (sendSocketListener) {
+            this.socket.off(`terminal:${id}:send_stream`, sendSocketListener);
+        }
+
+        if (consumeConfirmSocketListener) {
+            this.socket.off(`terminal:${id}:consume_confirm_stream`, consumeConfirmSocketListener);
+        }
+
+        this.socketSendListenersMap.delete(id);
+        this.socketConsumeConfirmListenersMap.delete(id);
 
         const ptyListeners = this.ptyListenersMap.get(id);
 
