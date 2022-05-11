@@ -29,6 +29,8 @@ export abstract class AbstractChannelRequest {
         this.clientKey = clientKey;
     }
 
+    public onInitialize() {}
+
     public setLogger(messageHandler: ClientMessageHandler) {
         if (_.isFunction(messageHandler)) {
             const handleMessage = messageHandler.bind(this) as ClientMessageHandler;

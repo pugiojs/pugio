@@ -56,7 +56,9 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
     public constructor() {
         super('pugio.web-terminal', 'Web Terminal (Built-in)');
+    }
 
+    public onInitialize(): void {
         this.socket = io('wss://pugio.lenconda.top/client', {
             transportOptions: {
                 polling: {

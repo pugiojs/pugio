@@ -69,6 +69,7 @@ export class ChannelService {
                     this.clientConfig.apiKey,
                     this.clientConfig.clientId,
                 ));
+                channelRequestHandler.onInitialize();
 
                 this.channelRequestsMap.set(scope, channelRequestHandler);
 
