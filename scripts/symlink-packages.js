@@ -7,7 +7,7 @@ const glob = require('glob');
 const _ = require('lodash');
 const { program } = require('commander');
 
-const symlink = (action = 'action', packages = []) => {
+const symlink = (action = 'create', packages = []) => {
     const BASE_DIR = path.resolve(__dirname, '..');
     const PROCESS_DIR = path.dirname(process.execPath);
 
