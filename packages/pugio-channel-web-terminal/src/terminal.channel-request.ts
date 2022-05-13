@@ -5,7 +5,6 @@ import {
     TerminalChannelConfig,
     TerminalChannelConnectRequestData,
     TerminalChannelConnectResponseData,
-    TerminalChannelConsumeConfirmRequestData,
     TerminalChannelDataRequestData,
     TerminalChannelHandshakeResponseData,
     TerminalChannelRequestData,
@@ -35,12 +34,8 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     protected ptyKillerMap = new Map<string, ReturnType<typeof setTimeout>>();
     protected ptyConfigMap = new Map<string, TerminalChannelConfig>();
     protected ptyContentMap = new Map<string, string[]>();
-    protected ptySendSequenceMap = new Map<string, number>();
-    protected ptyWriteSequenceMap = new Map<string, number>();
     protected ptyListenersMap = new Map<string, IDisposable[]>();
-    protected consumeMap = new Map<string, Set<number>>();
     protected socketSendListenersMap = new Map<string, Function>();
-    protected socketConsumeConfirmListenersMap = new Map<string, Function>();
     private socket: Socket;
 
     private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
@@ -118,8 +113,6 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         throw new Error(`PTY ${id} is not waiting or not running`);
                     }
 
-                    this.ptySendSequenceMap.set(id, 0);
-                    this.ptyWriteSequenceMap.set(id, 0);
                     let ptyProcess = this.ptyProcessMap.get(id);
                     let ptyContent = this.ptyContentMap.get(id);
 
@@ -128,7 +121,6 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                             try {
                                 const {
                                     data: ptyData = '',
-                                    sequence: dataSequence = 1,
                                 } = data as TerminalChannelDataRequestData;
 
                                 if (!_.isString(id)) {
@@ -141,29 +133,23 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                                     throw new Error(`PTY process ${id} not found`);
                                 }
 
-                                const intervalId = setInterval(() => {
-                                    if (this.ptyWriteSequenceMap.get(id) + 1 === dataSequence) {
-                                        this.renewPtyKiller(id);
+                                this.renewPtyKiller(id);
 
-                                        let accepted = true;
+                                let accepted = true;
 
-                                        if (ptyData) {
-                                            this.ptyContentMap.get(id).push(ptyData);
-                                            ptyProcess.write(
-                                                decodeURI(Buffer.from(ptyData, 'base64').toString()),
-                                            );
-                                        } else {
-                                            accepted = false;
-                                        }
+                                if (ptyData) {
+                                    this.ptyContentMap.get(id).push(ptyData);
+                                    ptyProcess.write(
+                                        decodeURI(Buffer.from(ptyData, 'base64').toString()),
+                                    );
+                                } else {
+                                    accepted = false;
+                                }
 
-                                        this.ptyWriteSequenceMap.set(id, dataSequence);
-                                        clearInterval(intervalId);
-                                        this.log({
-                                            level: 'info',
-                                            data: `Data sent to terminal '${id}' read, accepted: ${accepted}`,
-                                        });
-                                    }
-                                }, 0);
+                                this.log({
+                                    level: 'info',
+                                    data: `Data sent to terminal '${id}' read, accepted: ${accepted}`,
+                                });
                             } catch (e) {
                                 this.log({
                                     level: 'warn',
@@ -173,34 +159,6 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         });
 
                         this.socket.on(`terminal:${id}:send_data`, this.socketSendListenersMap.get(id));
-                    }
-
-                    if (!this.socketConsumeConfirmListenersMap.get(id)) {
-                        this.socketConsumeConfirmListenersMap.set(id, (data: TerminalChannelConsumeConfirmRequestData) => {
-                            try {
-                                const {
-                                    sequence,
-                                } = data as TerminalChannelConsumeConfirmRequestData;
-
-                                if (!this.consumeMap.get(id)) {
-                                    this.consumeMap.set(id, new Set<number>());
-                                }
-
-                                this.consumeMap.get(id).add(sequence);
-
-                                this.log({
-                                    level: 'info',
-                                    data: `Handshake consumed for terminal '${id}', sequence ${sequence}`,
-                                });
-                            } catch (e) {
-                                this.log({
-                                    level: 'warn',
-                                    data: 'Error confirming: ' + e.message || e.toString(),
-                                });
-                            }
-                        });
-
-                        this.socket.on(`terminal:${id}:consume_confirm_data`, this.socketConsumeConfirmListenersMap.get(id));
                     }
 
                     if (!ptyProcess) {
@@ -228,27 +186,16 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                         const content = Buffer.from(
                             encodeURI(Buffer.from(data).toString('utf-8')),
                         ).toString('base64');
-                        const sequence = this.ptySendSequenceMap.get(id);
-                        const currentSequence = sequence + 1;
-                        this.ptySendSequenceMap.set(id, currentSequence);
                         this.renewPtyKiller(id);
-
                         ptyContent.push(content);
 
-                        const pushChannelInterval = setInterval(() => {
-                            this.socket.emit('channel_stream', {
-                                eventId: `terminal:${id}:recv_data`,
-                                roomId: this.client.clientId,
-                                data: {
-                                    content,
-                                    sequence: currentSequence,
-                                },
-                            });
-
-                            if (!currentSequence || this.consumeMap.get(id)?.has(currentSequence)) {
-                                clearInterval(pushChannelInterval);
-                            }
-                        }, 1000);
+                        this.socket.emit('channel_stream', {
+                            eventId: `terminal:${id}:recv_data`,
+                            roomId: this.client.clientId,
+                            data: {
+                                content,
+                            },
+                        });
                     });
 
                     const closeListener = ptyProcess.onExit(async (data) => {
@@ -379,24 +326,13 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
         this.ptyContentMap.set(id, null);
         this.ptyContentMap.delete(id);
 
-        this.ptySendSequenceMap.delete(id);
-        this.ptyWriteSequenceMap.delete(id);
-
-        this.consumeMap.delete(id);
-
         const sendSocketListener = this.socketSendListenersMap.get(id);
-        const consumeConfirmSocketListener = this.socketConsumeConfirmListenersMap.get(id);
 
         if (sendSocketListener) {
             this.socket.off(`terminal:${id}:send_stream`, sendSocketListener);
         }
 
-        if (consumeConfirmSocketListener) {
-            this.socket.off(`terminal:${id}:consume_confirm_stream`, consumeConfirmSocketListener);
-        }
-
         this.socketSendListenersMap.delete(id);
-        this.socketConsumeConfirmListenersMap.delete(id);
 
         const ptyListeners = this.ptyListenersMap.get(id);
 
