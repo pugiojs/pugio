@@ -54,15 +54,7 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     }
 
     public onInitialize(): void {
-        this.socket = io('wss://pugio.lenconda.top/client', {
-            transportOptions: {
-                polling: {
-                    extraHeaders: {
-                        Authorization: 'CK ' + this.clientKey, // 'Bearer h93t4293t49jt34j9rferek...'
-                    },
-                },
-            },
-        });
+        this.socket = io(`wss://pugio.lenconda.top/client?auth_type=ck&auth_token=${this.clientKey}`);
 
         this.socket.on('connect', () => {
             this.log({
