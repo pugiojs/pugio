@@ -5,7 +5,6 @@ import {
     TerminalChannelConfig,
     TerminalChannelConnectRequestData,
     TerminalChannelConnectResponseData,
-    TerminalChannelDataRequestData,
     TerminalChannelHandshakeResponseData,
     TerminalChannelRequestData,
     TerminalChannelResizeRequestData,
@@ -26,7 +25,7 @@ import {
     IWindowsPtyForkOptions,
 } from 'node-pty';
 import * as os from 'os';
-import io, { Socket } from 'socket.io-client';
+import { WebSocket } from 'ws';
 
 export class TerminalChannelRequest extends AbstractChannelRequest implements AbstractChannelRequest {
     protected ptyProcessMap = new Map<string, IPty>();
@@ -35,8 +34,8 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
     protected ptyConfigMap = new Map<string, TerminalChannelConfig>();
     protected ptyContentMap = new Map<string, string[]>();
     protected ptyListenersMap = new Map<string, IDisposable[]>();
-    protected socketSendListenersMap = new Map<string, Function>();
-    private socket: Socket;
+    protected socketSendListenersMap = new Map<string, (data: any) => void>();
+    protected socketMap = new Map<string, WebSocket>();
 
     private defaultPtyForkOptions: IPtyForkOptions | IWindowsPtyForkOptions = {
         cols: 120,
@@ -51,24 +50,6 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
     public constructor() {
         super('pugio.web-terminal', 'Web Terminal (Built-in)');
-    }
-
-    public onInitialize(): void {
-        this.socket = io(`wss://pugio.lenconda.top/client?auth_type=ck&auth_token=${this.clientKey}`);
-
-        this.socket.on('connect', () => {
-            this.log({
-                level: 'info',
-                data: `Socket connected: ${this.socket.id}`,
-            });
-
-            this.socket.emit('join', this.client.clientId);
-
-            this.log({
-                level: 'info',
-                data: `Socket joined channel: '${this.client.clientId}'`,
-            });
-        });
     }
 
     public async handleRequest(data: TerminalChannelRequestData): Promise<TerminalChannelResponseData> {
@@ -109,12 +90,8 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     let ptyContent = this.ptyContentMap.get(id);
 
                     if (!this.socketSendListenersMap.get(id)) {
-                        this.socketSendListenersMap.set(id, (data: TerminalChannelDataRequestData) => {
+                        this.socketSendListenersMap.set(id, (data: any) => {
                             try {
-                                const {
-                                    data: ptyData = '',
-                                } = data as TerminalChannelDataRequestData;
-
                                 if (!_.isString(id)) {
                                     throw new Error('Parameter \'id\' must be specified');
                                 }
@@ -129,11 +106,9 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
 
                                 let accepted = true;
 
-                                if (ptyData) {
-                                    this.ptyContentMap.get(id).push(ptyData);
-                                    ptyProcess.write(
-                                        decodeURI(Buffer.from(ptyData, 'base64').toString()),
-                                    );
+                                if (data) {
+                                    this.ptyContentMap.get(id).push(data);
+                                    ptyProcess.write(decodeURI(data));
                                 } else {
                                     accepted = false;
                                 }
@@ -149,8 +124,12 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                                 });
                             }
                         });
+                    }
 
-                        this.socket.on(`terminal:${id}:send_data`, this.socketSendListenersMap.get(id));
+                    if (!this.socketMap.get(id)) {
+                        const socket = new WebSocket(`wss://pugio.lenconda.top/websocket?auth_type=ck&auth_token=${this.clientKey}&event=terminal:${id}:send_data&broadcast[]=terminal:${id}:recv_data&room=${this.client.clientId}`);
+                        socket.on('message', this.socketSendListenersMap.get(id));
+                        this.socketMap.set(id, socket);
                     }
 
                     if (!ptyProcess) {
@@ -175,26 +154,18 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
                     const listeners = this.ptyListenersMap.get(id);
 
                     const dataListener = ptyProcess.onData(async (data) => {
-                        const content = Buffer.from(
-                            encodeURI(Buffer.from(data).toString('utf-8')),
-                        ).toString('base64');
+                        const content = encodeURI(data);
                         this.renewPtyKiller(id);
                         ptyContent.push(content);
 
-                        this.socket.emit('channel_stream', {
-                            eventId: `terminal:${id}:recv_data`,
-                            roomId: this.client.clientId,
-                            data: {
-                                content,
-                            },
-                        });
+                        this.socketMap.get(id).send(content);
                     });
 
                     const closeListener = ptyProcess.onExit(async (data) => {
                         await this.killPty(id);
                         await this.clientManagerService.pushChannelGateway({
                             eventId: `terminal:${id}:close`,
-                            data,
+                            data: JSON.stringify(data),
                         });
                     });
 
@@ -319,9 +290,14 @@ export class TerminalChannelRequest extends AbstractChannelRequest implements Ab
         this.ptyContentMap.delete(id);
 
         const sendSocketListener = this.socketSendListenersMap.get(id);
+        const socket = this.socketMap.get(id);
 
-        if (sendSocketListener) {
-            this.socket.off(`terminal:${id}:send_stream`, sendSocketListener);
+        if (socket) {
+            if (sendSocketListener) {
+                socket.off('message', sendSocketListener);
+            }
+            socket.close();
+            this.socketMap.delete(id);
         }
 
         this.socketSendListenersMap.delete(id);

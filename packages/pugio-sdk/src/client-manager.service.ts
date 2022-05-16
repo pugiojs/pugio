@@ -110,7 +110,9 @@ export class ClientManagerService extends AbstractManagerService implements Abst
             .request({
                 method: 'post',
                 url: `/client/channel_gateway/${options.eventId}`,
-                data: options.data,
+                data: {
+                    data: options.data || '',
+                },
             });
     }
 
