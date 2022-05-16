@@ -136,7 +136,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                         try {
                             await this.clientManagerService.pushChannelGateway({
                                 eventId: 'file:download:processing',
-                                data: {
+                                data: JSON.stringify({
                                     index,
                                     chunkContent,
                                     chunkCount,
@@ -145,7 +145,7 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                                     filename,
                                     mimeType,
                                     md5,
-                                },
+                                }),
                             });
                             return true;
                         } catch (e) {
@@ -156,10 +156,10 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                         try {
                             await this.clientManagerService.pushChannelGateway({
                                 eventId: 'file:download:errored',
-                                data: {
+                                data: JSON.stringify({
                                     fileId: id,
                                     error: error.message || error.toString(),
-                                },
+                                }),
                             });
                         } catch (e) {}
                     },
@@ -173,9 +173,9 @@ export class FileChannelRequest extends AbstractChannelRequest implements Abstra
                             try {
                                 await this.clientManagerService.pushChannelGateway({
                                     eventId: 'file:download:finished',
-                                    data: {
+                                    data: JSON.stringify({
                                         fileId: id,
-                                    },
+                                    }),
                                 });
 
                                 this.senderList.set(id, null);
