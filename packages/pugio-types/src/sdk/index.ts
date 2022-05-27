@@ -92,6 +92,7 @@ export interface PushChannelResponseResponse {
 export interface ReportClientStatusRequest {
     plaintext: string;
     cipher: string;
+    system?: string;
 }
 
 export interface ReportClientStatusResponse extends ClientManagerResponseBaseUnit {

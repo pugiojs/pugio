@@ -19,6 +19,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ChannelService } from './channel.service';
 import { constants } from '@pugio/builtins';
+import systemInfo from 'systeminformation';
 
 import { FileChannelRequest } from '@pugio/channel-file-transfer';
 import { TerminalChannelRequest } from '@pugio/channel-web-terminal';
@@ -223,9 +224,32 @@ export class ClientService {
 
         const intervalId = setInterval(() => {
             const plaintext = Math.random().toString(32).slice(2);
-            this.clientManagerService.reportClientStatus({
-                plaintext,
-                cipher: this.utilsService.encryptContentWithRSAPublicKey(plaintext, this.publicKey),
+            const cipher = this.utilsService.encryptContentWithRSAPublicKey(plaintext, this.publicKey);
+
+            this.messageHandler({
+                level: 'info',
+                data: `Client status updated, plain: ${plaintext}, cipher: ${cipher}`,
+            });
+
+            systemInfo.getAllData().then((data) => {
+                this.clientManagerService.reportClientStatus({
+                    plaintext,
+                    cipher,
+                    system: JSON.stringify(_.pick(
+                        data,
+                        [
+                            'version',
+                            'os',
+                            'cpu',
+                            'time',
+                            'cpuCurrentSpeed',
+                            'currentLoad',
+                            'disksIO',
+                            'fsSize',
+                            'mem',
+                        ],
+                    )),
+                });
             });
         }, 60000);
 
