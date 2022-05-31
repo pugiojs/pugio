@@ -1,9 +1,8 @@
 import { Service } from 'typedi';
 import _ from 'lodash';
-import {
-    CaseStyleType,
-    DataType,
-} from '@pugio/types';
+
+export type DataType = Array<any> | Object | string | Date;
+export type CaseStyleType = 'snake' | 'camel' | 'kebab';
 
 @Service()
 export class CaseTransformerService {
