@@ -1,6 +1,6 @@
 {
     "name": "@pugio/channel-pipelines",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "description": "Pugio build-in channel",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
@@ -24,11 +24,11 @@
         "url": "https://github.com/pugiojs/pugio/issues"
     },
     "dependencies": {
-        "@pugio/execution": "^2.1.1",
-        "@pugio/sdk": "^2.1.1",
-        "@pugio/segmental-transferer": "^2.1.1",
-        "@pugio/types": "^2.1.1",
-        "@pugio/utils": "^2.1.1",
+        "@pugio/execution": "^2.1.2",
+        "@pugio/sdk": "^2.1.2",
+        "@pugio/segmental-transferer": "^2.1.2",
+        "@pugio/types": "^2.1.2",
+        "@pugio/utils": "^2.1.2",
         "fs-extra": "^10.0.0",
         "lodash": "^4.17.21",
         "reflect-metadata": "^0.1.13",

@@ -1,6 +1,6 @@
 {
     "name": "@pugio/tcp-bridge",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "description": "Bridge for TCP socket and Node.js",
     "author": "lenconda <i@lenconda.top>",
     "homepage": "https://github.com/pugiojs/pugio#readme",
